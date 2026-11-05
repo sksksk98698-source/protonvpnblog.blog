@@ -30,10 +30,7 @@ const t = useTranslations("common");
 const authorMap = await Promise.all(
   authors.map(async (author: string) => {
     const name = await getAuthorName(language, slug(author));
-
-    const path = author === "default" ? `/${language}/about` : `/${language}/about/${slug(author)}`;
-
-    return { name, path };
+    return { name };
   }),
 );
 ---
@@ -106,11 +103,11 @@ const authorMap = await Promise.all(
         <div class="container authors">
           {t("author_prefix")}
           <div class="wrapper authors">
-            {authorMap.map(({ name, path }, index) => (
+            {authorMap.map(({ name }, index) => (
               <span>
-                <Link href={path} data-pagefind-filter={t("author")}>
+                <span data-pagefind-filter={t("author")}>
                   {name}
-                </Link>
+                </span>
                 {index < authorMap.length - 1 && ","}
               </span>
             ))}

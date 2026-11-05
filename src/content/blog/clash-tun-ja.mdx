@@ -1,0 +1,18 @@
+---
+title: "Clash Verge Rev TUNモード完全導入ガイド：仮想アダプタ設定と通信途絶防止"
+summary: "仮想NICと物理NICのルーティング競合解決、Fake-IPモードの設定、およびシステム全体の透明プロキシ構築手順。"
+translationKey: "clash-tun"
+date: "2025-01-12T10:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["Clash", "クライアント", "TUNモード", "ルーティング", "トラブルシューティング"]
+categories: ["クライアント導入"]
+language: "ja-JP"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## TUNモードが不可欠な理由
+
+通常のシステムプロキシ（ポート7890）では、コマンドライン（Git、curl、Docker）やゲームのUDP通信を傍受できません。
+TUN仮想アダプタを導入することで、OS全体のすべてのネットワークトラフィックを確実にプロキシトンネルへ流し込むことが可能です。

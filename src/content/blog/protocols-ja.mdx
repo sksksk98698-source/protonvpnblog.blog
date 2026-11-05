@@ -1,0 +1,23 @@
+---
+title: "2025年プロキシプロトコル徹底比較：VLESS-Reality、Hysteria 2、Shadowsocks"
+summary: "ハンドシェイク遅延、TLS偽装、UDP輻輳制御アルゴリズム、およびIEPL専用線への最適化を技術的に詳細解説。"
+translationKey: "protocols"
+date: "2025-01-10T12:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["VLESS", "Shadowsocks", "Hysteria2", "プロトコル", "ベンチマーク"]
+categories: ["プロトコル分析"]
+language: "ja-JP"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## プロキシプロトコルの進化と最新技術
+
+近年のプロキシプロトコルは、単なる対称暗号化からゼロコピーストリーミング、大手企業TLS証明書の借用偽装（Reality）、そしてUDPベースの強力なパケットロス耐性（Hysteria 2）へと進化しています。
+
+### 1. Shadowsocks：IEPL専用線における最速の選択肢
+パブリック回線では検知されやすいものの、遮断を受けないIEPL/IPLC専用線内部では、CPU負荷が極めて低く最適なスループットを発揮します。
+
+### 2. VLESS-Reality：偽装性と通信速度の最高峰
+大手クラウド（Apple、Microsoft等）の正規TLS証明書を借用することで、検閲システムのアクティブプロービングを完全に無力化します。

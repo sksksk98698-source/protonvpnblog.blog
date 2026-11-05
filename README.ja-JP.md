@@ -1,29 +1,25 @@
-# Astro Plain
+# Proton VPN Blog
 
-![Astro Plain](/src/assets/screenshot.jpg)
+![Proton VPN Blog](/src/assets/screenshot.jpg)
 
-[Astro](https://astro.build/) ベースのミニマルな多言語静的ブログテンプレートで、CSS / UI フレームワークに依存しません。
-
-[オンラインデモを見る](https://astro-plain-demo.pages.dev) · [Lighthouse 100/100 レポート](https://pagespeed.web.dev/analysis/https-astro-plain-demo-pages-dev-en-US-blog-sample-intro/koeoulhg15?form_factor=mobile)
+[Astro](https://astro.build/) ベースの独立・純粋・高性能な多言語静的セキュリティ技術ブログです。CSS / UI フレームワークに依存しません。
 
 [English](/README.md) | [简体中文](/README.zh-Hans.md)
 
 ## 特徴
 
-- **高性能ミニマルアーキテクチャ**：[Astro](https://astro.build/) の静的サイト生成（SSG）をベースとし、CSS / UI フレームワークに依存しません。Lighthouse の全カテゴリで 100 点満点を達成。
+- **高性能ミニマルアーキテクチャ**：[Astro](https://astro.build/) の静的サイト生成（SSG）をベースとし、軽量で高速な配信を実現。
 - **国際化（i18n）と SEO**：
-  - 簡体字中国語、英語、日本語の翻訳を内蔵（[`ts-intl-astro`](https://github.com/aaakul/ts-intl) ベース）。
-  - サブパスベースの静的多言語ルーティング（例：`/zh-Hans/`、`/en-US/`、`/ja-JP/`）。
+  - 簡体字中国語、英語、日本語の多言語翻訳および静的ルーティングを内蔵。
   - スマート言語リダイレクト：言語設定 Cookie またはブラウザの言語設定に基づいて、サイトの言語を自動選択。
-  - 多言語 SEO タグ（`hreflang` / `x-default` / Open Graph）の自動生成。
-  - サイトマップ（Sitemap）、`robots.txt`、および各言語対応の RSS フィードの自動生成。
-- **オフライン全文検索**：[Pagefind](https://pagefind.app/) 静的検索エンジンを統合、設定不要。
+  - Google の検索仕様に準拠した多言語 SEO タグ（自己参照 `canonical`、`hreflang`、`x-default`）。
+  - ネイティブな Schema.org JSON-LD 構造化データ（`WebSite`、`BlogPosting`）。
+  - サイトマップ（Sitemap）、最適化された `robots.txt`、および各言語対応の RSS フィードの自動生成。
+- **オフライン全文検索**：[Pagefind](https://pagefind.app/) 静的検索エンジンを統合。
 - **モダンな Markdown / MDX ライティング体験**：
   - Zod と [Astro Content Layer](https://docs.astro.build/ja/guides/content-collections/) に基づく型安全なコンテンツコレクション。
   - [Expressive Code](https://expressive-code.com/) によるコードハイライト。
-  - 組み込みの実用的な MDX コンポーネント：ファイルツリー（[`FileTree`](https://starlight.astro.build/ja/guides/components/#file-tree)）、ステップバイステップ手順（[`Steps`](https://starlight.astro.build/ja/guides/components/#steps)）、タブ（[`Tabs`](https://starlight.astro.build/ja/guides/components/#tabs)）、および GitHub スタイルのアラートブロック引用（[`remark-github-blockquote-alert`](https://github.com/jaywcjlove/remark-github-blockquote-alert)）
-    。
-- **その他の機能**：[Disqus](https://disqus.com/) コメントシステムと [Microsoft Clarity](https://clarity.microsoft.com/) サイトアクセス分析をサポート。
+  - 組み込みの実用的な MDX コンポーネント：ファイルツリー（`FileTree`）、ステップバイステップ手順（`Steps`）、タブ（`Tabs`）。
 
 ## クイックスタート
 
@@ -32,8 +28,8 @@
 1. リポジトリをクローン：
 
    ```bash
-   git clone https://github.com/Aaakul/astro-plain.git
-   cd astro-plain
+   git clone https://protonvpnblog.blog.git
+   cd protonvpnblog.blog
    ```
 
 2. 依存関係をインストール：
@@ -164,12 +160,10 @@ link:
 
 ```yaml
 ---
-name: "Astro Plain" # 必須：プロジェクトタイトル
+name: "Security Tools" # 必須：プロジェクトタイトル
 language: "zh-Hans" # 必須：言語コード
-website: "https://example.com"
+website: "https://protonvpnblog.blog"
 image: "@/assets/project-preview.png"
-link:
-  github: "https://github.com/Aaakul/astro-plain"
 ---
 本文内容...
 ```

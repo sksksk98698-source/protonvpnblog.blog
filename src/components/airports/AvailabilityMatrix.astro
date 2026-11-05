@@ -1,0 +1,284 @@
+---
+import type { StreamingUnlock } from "@/data/airports";
+
+export interface Props {
+  unlock: StreamingUnlock;
+  unlockImages?: string[];
+  brandName?: string;
+}
+
+const { unlock, unlockImages = [], brandName = "" } = Astro.props;
+
+interface ServiceItem {
+  id: keyof StreamingUnlock;
+  name: string;
+  category: "AI" | "Streaming" | "Social";
+  icon: string;
+  tag: string;
+}
+
+const services: ServiceItem[] = [
+  { id: "chatgpt", name: "ChatGPT 4o / Canvas", category: "AI", icon: "🤖", tag: "OpenAI 原生解封" },
+  { id: "claude", name: "Claude 3.5 / Artifacts", category: "AI", icon: "🧠", tag: "严格抗风控住宅IP" },
+  { id: "gemini", name: "Google Gemini Advanced", category: "AI", icon: "✨", tag: "Google AI 全特性" },
+  { id: "netflix", name: "Netflix 4K 超高清", category: "Streaming", icon: "🎬", tag: "非自制剧非锁区" },
+  { id: "disney", name: "Disney+ / Hulu", category: "Streaming", icon: "🏰", tag: "原生中文字幕库" },
+  { id: "youtube4k", name: "YouTube Premium 4K", category: "Streaming", icon: "▶️", tag: "8K 60FPS 极速加载" },
+  { id: "tiktok", name: "TikTok 国际版 / 跨境电商", category: "Social", icon: "🎵", tag: "免拔卡防黑屏" },
+];
+
+const getStatusBadge = (status: "yes" | "partial" | "no") => {
+  switch (status) {
+    case "yes":
+      return { text: "完全解锁", class: "status-yes", icon: "🟢" };
+    case "partial":
+      return { text: "部分节点", class: "status-partial", icon: "🟡" };
+    case "no":
+      return { text: "未支持", class: "status-no", icon: "⚪" };
+  }
+};
+---
+
+<div class="matrix-wrapper border-shadow">
+  <div class="matrix-header">
+    <div class="matrix-title">
+      <span class="matrix-icon">🌐</span>
+      <span>全球核心业务与流媒体/AI 解锁矩阵 (Service Availability Matrix)</span>
+    </div>
+    <div class="matrix-hint">
+      <span>真机自动化巡检 · 每日 4 次风控阻断探测</span>
+    </div>
+  </div>
+
+  <div class="matrix-grid">
+    {services.map((srv) => {
+      const status = unlock[srv.id] || "partial";
+      const badge = getStatusBadge(status);
+      return (
+        <div class={`matrix-card ${badge.class}`}>
+          <div class="card-top">
+            <span class="service-icon">{srv.icon}</span>
+            <span class={`status-pill ${badge.class}`}>
+              <span class="status-dot">{badge.icon}</span>
+              {badge.text}
+            </span>
+          </div>
+          <div class="service-name">{srv.name}</div>
+          <div class="service-meta">
+            <span class="category-tag">{srv.category}</span>
+            <span class="desc-tag">{srv.tag}</span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  {unlockImages && unlockImages.length > 0 && (
+    <div class="unlock-gallery">
+      <div class="gallery-title">
+        <span>📸 现场实测流媒体/AI 解锁截屏证据 ({brandName || "节点实测"})</span>
+      </div>
+      <div class="gallery-grid">
+        {unlockImages.map((img, idx) => (
+          <a
+            href={img}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="gallery-item"
+            title="点击查看高清解锁测试大图"
+          >
+            <img src={img} alt={`${brandName} 流媒体/AI 节点解锁测试实测图 ${idx + 1}`} loading="lazy" />
+            <div class="gallery-overlay">
+              <span>🔍 查看高清大图</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  .matrix-wrapper {
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+  }
+
+  .matrix-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .matrix-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    font-size: var(--font-size-md);
+    color: var(--foreground);
+  }
+
+  .matrix-hint {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .matrix-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    transition: transform var(--duration), border-color var(--duration);
+  }
+
+  .matrix-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .service-icon {
+    font-size: 1.25rem;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .status-yes {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+  }
+
+  .status-partial {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+  }
+
+  .status-no {
+    background: rgba(156, 163, 175, 0.12);
+    color: var(--muted-foreground);
+  }
+
+  .status-dot {
+    font-size: 0.65rem;
+  }
+
+  .service-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-top: 2px;
+  }
+
+  .service-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .category-tag {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    color: var(--muted-foreground);
+  }
+
+  :global([data-color-scheme="dark"]) .category-tag {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .desc-tag {
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+  }
+
+  .unlock-gallery {
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px dashed var(--border);
+  }
+
+  .gallery-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: var(--space-2);
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .gallery-item {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: block;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--duration);
+  }
+
+  .gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity var(--duration);
+  }
+
+  .gallery-item:hover .gallery-overlay {
+    opacity: 1;
+  }
+
+  .gallery-item:hover img {
+    transform: scale(1.05);
+  }
+</style>

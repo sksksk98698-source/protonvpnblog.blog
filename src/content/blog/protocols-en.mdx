@@ -1,0 +1,29 @@
+---
+title: "Modern Proxy Protocols Benchmark (2025): VLESS-Reality, Hysteria 2 vs Shadowsocks"
+summary: "Comprehensive technical analysis of handshake latency, TLS impersonation, UDP congestion control, and IEPL dedicated line optimization."
+translationKey: "protocols"
+date: "2025-01-10T12:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["VLESS", "Shadowsocks", "Hysteria2", "Protocols", "Benchmark"]
+categories: ["Protocol Analysis"]
+language: "en-US"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## Evolution of Modern Proxy Protocols
+
+In the ever-evolving landscape of network circumvention, proxy protocols have transitioned from basic symmetric encryption to zero-copy streaming, TLS certificate borrowing, and brutal UDP-based congestion control.
+
+### 1. Shadowsocks (SS): Minimalist Architecture for IEPL Lines
+
+Shadowsocks provides symmetric stream encryption with minimal CPU overhead. While easily detectable over raw public networks due to entropy heuristics, it remains the gold standard inside dedicated **IEPL / IPLC enterprise tunnels** where public filtering does not occur.
+
+### 2. VLESS (XTLS-Reality): The Summit of Camouflage and Throughput
+
+Developed by the Xray and Sing-box communities, VLESS removes redundant encryption wrappers and leverages **Reality certificate borrowing**. It masquerades proxy traffic under authentic TLS certificates of major tech companies (Apple, Microsoft, Cloudflare), completely neutralizing active MITM probing.
+
+### 3. Hysteria 2: The Brutal UDP Breakthrough for Lossy Networks
+
+Built upon modern QUIC/UDP with custom Brutal congestion control, Hysteria 2 refuses to throttle speed upon encountering packet loss. It delivers uninterrupted 4K video playback even under severe 20%~40% cross-border packet degradation.

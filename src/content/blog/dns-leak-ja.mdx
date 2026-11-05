@@ -1,0 +1,21 @@
+---
+title: "DNS漏洩防止とDoH暗号化設定完全マニュアル"
+summary: "プロバイダによるDNSハイジャックとWebRTCによる実IP漏洩を防ぐためのDoH暗号化とルーティング設定手法。"
+translationKey: "dns-leak"
+date: "2025-01-15T15:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["DNS漏洩", "WebRTC", "DoH", "セキュリティ", "プライバシー"]
+categories: ["セキュリティ"]
+language: "ja-JP"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## DNS漏洩のリスクと対策
+
+プロキシ接続中であっても、暗号化されていない平文UDP 53のDNS問い合わせがローカルISPに送信されると、閲覧履歴や位置情報が漏洩します。
+
+### 確実な保護対策
+1. **DNS over HTTPS (DoH) の採用**: 暗号化されたTLSトンネル内で名前解決を行います。
+2. **WebRTC漏洩の遮断**: ブラウザのSTUN機能による実IPアドレスの露出をブロックします。

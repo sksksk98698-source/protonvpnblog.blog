@@ -1,0 +1,572 @@
+---
+import { AVAILABLE_LANG, useLocale, useTranslations } from "~/i18n";
+import RootLayout from "@/layouts/RootLayout.astro";
+import { PROXY_CLIENTS, type ProxyClient } from "@/data/clients";
+import Link from "@/components/ui/Link.astro";
+import PillarCapsuleNav from "@/components/ui/PillarCapsuleNav.astro";
+
+export async function getStaticPaths() {
+  return AVAILABLE_LANG.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || "zh-Hans";
+
+const pageTitle =
+  currentLang === "zh-Hans"
+    ? "全平台代理客户端下载与配置指南 (Windows/Mac/iOS/Android/软路由) - protonVPN"
+    : currentLang === "ja-JP"
+    ? "全プラットフォーム対応プロキシクライアント導入完全ガイド (Windows/Mac/iOS/Android) - protonVPN"
+    : "Comprehensive Proxy Client Download & Setup Encyclopedia - protonVPN";
+
+const pageDescription =
+  currentLang === "zh-Hans"
+    ? "protonVPN 2025 全平台代理客户端全书：详尽收录 Clash Verge Rev、v2rayN、Shadowrocket 小火箭、Quantumult X、Surge、OpenClash 等主流内核工具。提供官方开源下载入口、规则分流与 TUN 模式配置教程。"
+    : currentLang === "ja-JP"
+    ? "Clash Verge Rev、v2rayN、Shadowrocket、Surge、OpenClashなど、各OS向けプロキシツールの機能比較と導入マニュアル。"
+    : "Complete catalog of proxy clients across Windows, macOS, iOS, Android, Linux, and OpenWrt. Features comparison, kernels, and official download links.";
+
+const platforms = ["Windows", "Android", "iOS", "macOS", "Linux", "OpenWrt"] as const;
+
+// Group by platform
+const groupedClients: Record<string, ProxyClient[]> = {};
+platforms.forEach((p) => {
+  groupedClients[p] = PROXY_CLIENTS.filter((c) => c.platform === p);
+});
+---
+
+<RootLayout title={pageTitle} description={pageDescription}>
+  <div slot="content" class="clients-hub-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <Link href={`/${currentLang}`}>首页</Link>
+      <span class="sep">/</span>
+      <span class="current">客户端全书</span>
+    </nav>
+
+    <!-- SEO/GEO Pillar Capsule Nav Bar -->
+    <PillarCapsuleNav lang={currentLang} activeKey="clients" />
+
+    <!-- Header Banner -->
+    <header class="clients-header">
+      <div class="header-badges">
+        <span class="pill-badge pill-glow">📱 客户端生态全景</span>
+        <span class="pill-badge">6 大主流系统适配</span>
+        <span class="pill-badge pill-success">官方开源渠道直连</span>
+        <span class="pill-badge">TUN 虚拟网卡接管教学</span>
+      </div>
+      <h1 class="header-title">全平台第三方代理客户端全书与配置指南</h1>
+      <p class="header-desc">
+        无论你使用何种操作系统，选对客户端都能让机场专线的速度和稳定性提升数倍。本指南系统梳理了 Windows、macOS、iOS、Android、Linux 及 OpenWrt 路由器的主流代理软件，附带官方正品发布源与订阅导入指导。
+      </p>
+
+      <!-- Dedicated Client Fast Track Banner -->
+      <div class="dedicated-banner border-shadow">
+        <div class="banner-left">
+          <span class="banner-icon">🚀</span>
+          <div>
+            <h3 class="banner-title">不想手动折腾复杂订阅规则？推荐「光速云官方自研一键端」</h3>
+            <p class="banner-text">
+              老牌专线光速云提供 Windows、macOS、Android 官方专属客户端，登录即用，免配置免转换，节点实时自动同步，同时完美支持第三方通用订阅导入。
+            </p>
+          </div>
+        </div>
+        <div class="banner-right">
+          <Link href={`/${currentLang}/airports/guangsu`} class="btn-banner-detail">
+            查看光速云测评 ↗
+          </Link>
+          <a
+            href="https://sahude.gsyvipaff.com/#/?code=keqgvT5Y"
+            target="_blank"
+            rel="nofollow sponsored noopener"
+            class="btn-banner-cta"
+          >
+            下载官方一键端 ⚡
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Platform Anchor Nav -->
+    <nav class="platform-nav" aria-label="平台跳转">
+      {platforms.map((p) => (
+        <a href={`#platform-${p.toLowerCase()}`} class="platform-nav-btn">
+          {p === "Windows" && "🪟"}
+          {p === "Android" && "🤖"}
+          {p === "iOS" && "🍏"}
+          {p === "macOS" && "🍎"}
+          {p === "Linux" && "🐧"}
+          {p === "OpenWrt" && "📡"}
+          <span>{p}</span>
+          <span class="nav-count">({groupedClients[p]?.length || 0})</span>
+        </a>
+      ))}
+    </nav>
+
+    <!-- Platform Sections -->
+    {platforms.map((platform) => {
+      const clients = groupedClients[platform] || [];
+      return (
+        <section class="platform-section" id={`platform-${platform.toLowerCase()}`}>
+          <div class="platform-sec-header">
+            <h2 class="platform-title">
+              <span class="sec-plat-icon">
+                {platform === "Windows" && "🪟"}
+                {platform === "Android" && "🤖"}
+                {platform === "iOS" && "🍏"}
+                {platform === "macOS" && "🍎"}
+                {platform === "Linux" && "🐧"}
+                {platform === "OpenWrt" && "📡"}
+              </span>
+              <span>{platform} 系统主流客户端推荐</span>
+            </h2>
+            <span class="platform-subtitle">
+              共精选收录 {clients.length} 款主流工具 · 优先推荐标有「★ 首选主力」的客户端
+            </span>
+          </div>
+
+          <div class="clients-grid">
+            {clients.map((c) => (
+              <div class={`client-card border-shadow ${c.recommended ? "card-recommended" : ""}`}>
+                <div class="client-top">
+                  <div class="client-name-box">
+                    <h3 class="client-name">{c.name}</h3>
+                    {c.recommended && <span class="badge-rec">★ 首选主力</span>}
+                  </div>
+                  <span class="kernel-tag">{c.kernel}</span>
+                </div>
+
+                <p class="client-desc">{c.description}</p>
+
+                <div class="client-features">
+                  <span class="feat-label">核心特性:</span>
+                  <span class="feat-text">{c.features}</span>
+                </div>
+
+                <div class="client-footer">
+                  <span class="dl-type">来源：{c.downloadType}</span>
+                  <a
+                    href={c.downloadUrl}
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    class="btn-dl"
+                  >
+                    获取安装包 ↗
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+    <!-- Setup Tutorials -->
+    <article class="setup-tutorial-section border-shadow">
+      <h2>🛠️ 新手 3 分钟通用订阅配置标准指引</h2>
+      <div class="tutorial-steps">
+        <div class="step-card">
+          <div class="step-num">Step 1</div>
+          <h3>获取机场订阅链接</h3>
+          <p>
+            在 <Link href={`/${currentLang}/airports`}>42家机场库</Link> 中选购心仪的机场（如光速云），登录后台「用户中心」，找到「一键导入」或「复制订阅链接（Clash / Shadowrocket / 通用聚合）」。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 2</div>
+          <h3>粘贴订阅至客户端</h3>
+          <p>
+            以 Windows Clash Verge Rev 为例：打开软件左侧「订阅配置（Profiles）」页面，将复制的链接粘贴到顶部输入框中，点击「下载/保存（Download）」，软件将自动加载所有海外节点。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 3</div>
+          <h3>开启分流与 TUN 模式</h3>
+          <p>
+            在「代理（Proxies）」页面切换至「规则模式（Rule）」，根据需求勾选香港、日本或美国节点；在设置中勾选「TUN 模式」，即可让游戏、CMD 终端与全系统流量自动无缝接入。
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</RootLayout>
+
+<style>
+  .clients-hub-container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-4);
+  }
+
+  .breadcrumb-nav a {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .breadcrumb-nav a:hover {
+    color: var(--primary);
+  }
+
+  .breadcrumb-nav .sep {
+    color: var(--border);
+  }
+
+  .breadcrumb-nav .current {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .clients-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .header-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .pill-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .pill-glow {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .pill-success {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  .header-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    margin: var(--space-2) 0;
+    color: var(--foreground);
+  }
+
+  .header-desc {
+    font-size: var(--font-size-md);
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  /* Dedicated Banner */
+  .dedicated-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, var(--accent) 100%);
+    border: 1px solid rgba(14, 165, 233, 0.4);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .banner-left {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .banner-icon {
+    font-size: 2rem;
+  }
+
+  .banner-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .banner-text {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin: 4px 0 0 0;
+    line-height: 1.5;
+  }
+
+  .banner-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .btn-banner-detail {
+    font-size: 0.75rem;
+    padding: var(--space-2) var(--space-3);
+    background: var(--background);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .btn-banner-cta {
+    font-size: 0.75rem;
+    padding: var(--space-2) var(--space-4);
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  }
+
+  /* Platform Nav */
+  .platform-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+  }
+
+  .platform-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--foreground);
+    text-decoration: none;
+    font-weight: 500;
+    transition: border-color var(--duration);
+  }
+
+  .platform-nav-btn:hover {
+    border-color: var(--primary);
+  }
+
+  .nav-count {
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+  }
+
+  /* Section */
+  .platform-section {
+    margin-bottom: var(--space-10);
+    scroll-margin-top: calc(var(--header-nav-height) + 16px);
+  }
+
+  .platform-sec-header {
+    margin-bottom: var(--space-4);
+  }
+
+  .platform-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .sec-plat-icon {
+    font-size: 1.5rem;
+  }
+
+  .platform-subtitle {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-top: 4px;
+    display: block;
+  }
+
+  .clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .client-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform var(--duration), border-color var(--duration);
+  }
+
+  .client-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
+
+  .card-recommended {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.04) 0%, var(--accent) 100%);
+  }
+
+  .client-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .client-name-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+  }
+
+  .client-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  .badge-rec {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .kernel-tag {
+    font-family: var(--font-family-monospaced);
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+
+  .client-desc {
+    font-size: 0.825rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+  }
+
+  .client-features {
+    font-size: 0.75rem;
+    margin-bottom: var(--space-3);
+    line-height: 1.4;
+  }
+
+  .feat-label {
+    color: var(--muted-foreground);
+  }
+
+  .feat-text {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .client-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+  }
+
+  .dl-type {
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+  }
+
+  .btn-dl {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* Tutorial */
+  .setup-tutorial-section {
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-top: var(--space-10);
+  }
+
+  .setup-tutorial-section h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--foreground);
+    margin-top: 0;
+    margin-bottom: var(--space-4);
+  }
+
+  .tutorial-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .step-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .step-num {
+    font-family: var(--font-family-monospaced);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: var(--space-1);
+  }
+
+  .step-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 var(--space-2) 0;
+    color: var(--foreground);
+  }
+
+  .step-card p {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin: 0;
+  }
+</style>

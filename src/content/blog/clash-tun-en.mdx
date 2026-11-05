@@ -1,0 +1,24 @@
+---
+title: "Clash Verge Rev Mastery: System TUN Mode & Transparent Routing Guide"
+summary: "Detailed guide on resolving virtual adapter conflicts, configuring Fake-IP DNS mode, and establishing transparent system-wide proxy routing."
+translationKey: "clash-tun"
+date: "2025-01-12T10:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["Clash", "Clients", "TUN Mode", "Routing", "Troubleshooting"]
+categories: ["Client Tutorials"]
+language: "en-US"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## Why TUN Virtual Network Adapters Outperform System Proxies
+
+Standard system proxies only intercept HTTP/HTTPS traffic on port 7890, leaving CLI tools (Git, curl, Docker), game engines, and UDP traffic completely unproxied.
+
+By activating **TUN Mode**, Clash creates a virtual kernel network adapter (Wintun / utun) that captures 100% of layer-3 IP packets, providing transparent, leak-free proxying across all applications.
+
+### Key Configuration Essentials
+
+1. **Service Mode Installation**: Ensure Clash Verge has system privileges to bind virtual adapters.
+2. **Fake-IP Implementation**: Reduces DNS roundtrip latency to 1ms by returning virtual `198.18.0.0/16` addresses while proxying the actual DNS query over remote IEPL nodes.

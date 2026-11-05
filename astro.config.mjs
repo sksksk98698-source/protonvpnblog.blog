@@ -45,8 +45,18 @@ export default defineConfig({
     }),
     mdx(),
     sitemap({
-      // Exclude /page/1 to avoid duplicate URLs with the main list page
-      filter: (page) => !/\/page\/1\/?$/.test(page),
+      // Exclude search pages (blocked by robots.txt) and noindex taxonomy / pagination pages
+      filter: (page) => {
+        // Exclude search pages
+        if (/\/search\/?$/.test(page)) return false;
+        // Exclude noindex categories, tags, and paginated pages
+        if (/\/(categories|tags|page)\//.test(page)) return false;
+        // Exclude untranslated noindex en-US and ja-JP airport detail pages
+        if (/\/(en-US|ja-JP)\/airports\/[^\/]+\/?$/.test(page)) return false;
+        // Exclude /page/1
+        if (/\/page\/1\/?$/.test(page)) return false;
+        return true;
+      },
     }),
     pagefind(),
     tsIntl(),

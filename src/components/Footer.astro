@@ -8,10 +8,23 @@ const siteTitle = t("site_title");
 ---
 
 <footer id="container">
-  <div>&copy; {currentYear} {siteTitle}</div>
-  <Link href="https://github.com/Aaakul/astro-plain">
-    Made with <strong>Astro Plain</strong>
-  </Link>
+  <div class="footer-nav">
+    <Link href="/zh-Hans/about">评测准则与关于</Link>
+    <span class="sep">·</span>
+    <Link href="/zh-Hans/free">免费资源全书</Link>
+    <span class="sep">·</span>
+    <Link href="/zh-Hans/faq">进阶排障FAQ</Link>
+    <span class="sep">·</span>
+    <Link href="/zh-Hans/speedtest">晚高峰测速</Link>
+    <span class="sep">·</span>
+    <Link href="/zh-Hans/clients">客户端全书</Link>
+    <span class="sep">·</span>
+    <Link href="/zh-Hans/solutions">场景方案</Link>
+  </div>
+  <div class="footer-disclaimer">
+    🛡️ 免责声明：本实验室为民间中立跨境网络性能与协议评测组织，与瑞士 Proton AG（Proton VPN / Mail 官方）无任何商业从属或品牌关联。
+  </div>
+  <div class="copyright">&copy; {currentYear} {siteTitle}. All rights reserved.</div>
 </footer>
 
 <style>
@@ -19,11 +32,51 @@ const siteTitle = t("site_title");
     display: flex;
     flex-direction: column;
     bottom: 0;
-    row-gap: var(--space-2);
+    row-gap: var(--space-3);
     margin-top: var(--space-12);
     padding-block: var(--space-6);
     color: var(--muted-foreground);
     text-align: center;
     font-size: var(--font-size-sm);
+    border-top: 1px solid var(--border);
+    max-width: var(--content-max-width);
+    margin-inline: auto;
+    width: 100%;
+    padding-inline: var(--space-4);
+  }
+
+  .footer-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: 0.85rem;
+  }
+
+  .footer-nav a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color var(--duration);
+  }
+
+  .footer-nav a:hover {
+    color: var(--primary);
+  }
+
+  .sep {
+    color: var(--border);
+  }
+
+  .footer-disclaimer {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .copyright {
+    font-size: 0.75rem;
   }
 </style>

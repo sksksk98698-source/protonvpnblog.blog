@@ -14,7 +14,29 @@ export const GET: APIRoute = async () => {
     });
   }
 
-  return new Response(`User-agent: *\nAllow: /\n\nSitemap: ${SITEMAP_URL}\n`, {
+  const content = [
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /*/search",
+    "",
+    "User-agent: Googlebot",
+    "Allow: /",
+    "",
+    "User-agent: bingbot",
+    "Allow: /",
+    "",
+    "User-agent: Baiduspider",
+    "Allow: /",
+    "",
+    "User-agent: yisouspider",
+    "Allow: /",
+    "",
+    `Sitemap: ${SITE_URL_WITH_BASE}/sitemap.xml`,
+    `Sitemap: ${SITEMAP_URL}`,
+    "",
+  ].join("\n");
+
+  return new Response(content, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
     },

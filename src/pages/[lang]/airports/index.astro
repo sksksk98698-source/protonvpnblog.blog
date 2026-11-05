@@ -1,0 +1,600 @@
+---
+import { AVAILABLE_LANG, useLocale, useTranslations } from "~/i18n";
+import RootLayout from "@/layouts/RootLayout.astro";
+import AirportCard from "@/components/airports/AirportCard.astro";
+import { AIRPORT_BRANDS } from "@/data/airports";
+import Link from "@/components/ui/Link.astro";
+import PillarCapsuleNav from "@/components/ui/PillarCapsuleNav.astro";
+
+export async function getStaticPaths() {
+  return AVAILABLE_LANG.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || "zh-Hans";
+
+// SEO Metadata
+const pageTitle =
+  currentLang === "zh-Hans"
+    ? "42家主流机场梯子深度测评与晚高峰真机测速库 (2025最新) - protonVPN"
+    : currentLang === "ja-JP"
+    ? "42社プロキシ空港・VPN徹底比較とピーク時スピードテストDB (2025最新) - protonVPN"
+    : "42 Proxy Airports Comprehensive Review & Peak-Hour Speedtest Database (2025) - protonVPN";
+
+const pageDescription =
+  currentLang === "zh-Hans"
+    ? "protonVPN 评测实验室详尽收录 42 家主流机场品牌。基于千兆宽带晚高峰真机跑测，深度评测光速云、IEPL/IPLC 专线、便宜平价、永久不限时套餐、全平台客户端及流媒体/AI 解锁表现。"
+    : currentLang === "ja-JP"
+    ? "protonVPN検証ラボによる42社のプロキシ空港サービス一覧。IEPL/IPLC専用線、格安月額プラン、買い切り無期限、AIおよび動画ストリーミングのブロック解除実測データを網羅。"
+    : "Comprehensive review of 42 top proxy airports & VPN services by protonVPN Lab. Real peak-hour speedtests, IEPL/IPLC lines, budget & one-time plans, and streaming/AI unlock benchmarks.";
+
+// Extract featured #1
+const featuredBrand = AIRPORT_BRANDS.find((a) => a.isFeatured) || AIRPORT_BRANDS[0];
+const otherBrands = AIRPORT_BRANDS.filter((a) => a.id !== featuredBrand.id);
+---
+
+<RootLayout title={pageTitle} description={pageDescription}>
+  <div slot="content" class="airports-hub-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <Link href={`/${currentLang}`}>首页</Link>
+      <span class="sep">/</span>
+      <span class="current">42家机场库</span>
+    </nav>
+
+    <!-- SEO/GEO Pillar Capsule Nav Bar -->
+    <PillarCapsuleNav lang={currentLang} activeKey="airports" />
+
+    <!-- Hero Header -->
+    <header class="hub-header">
+      <div class="hub-badge-row">
+        <span class="pill-badge pill-glow">📡 网络雷达观测所</span>
+        <span class="pill-badge">42 家品牌全覆盖</span>
+        <span class="pill-badge pill-success">16+ 真机测速图鉴</span>
+        <span class="pill-badge">晚高峰 20:00~23:00 真实压测</span>
+      </div>
+      <h1 class="hub-title">42 家主流机场梯子深度测评与测速雷达</h1>
+      <p class="hub-intro">
+        拒绝主观云测评与虚标参数。本数据库由 <strong>protonVPN 实验室</strong> 基于中国电信 1000M 宽带，在晚高峰（20:00 - 23:00）针对每家机场的香港、日本、新加坡、美国等核心节点进行单线程/多线程真机压测、丢包率统计与流媒体/AI 封锁阻断验证。
+      </p>
+
+      <!-- Key Metrics Stats Bar -->
+      <div class="metrics-bar border-shadow">
+        <div class="metric-item">
+          <span class="metric-val">42</span>
+          <span class="metric-lbl">在测机场品牌</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val highlight">2.5 Gbps</span>
+          <span class="metric-lbl">光速云实测最高峰值</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val">100%</span>
+          <span class="metric-lbl">第三方客户端兼容</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val status-green">&gt; 99.8%</span>
+          <span class="metric-lbl">专线晚高峰可用率</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Interactive Filter & Search Controls -->
+    <section class="filter-section border-shadow" aria-label="机场筛选与检索">
+      <div class="search-box-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="airportSearchInput"
+          placeholder="快速搜索机场名称、协议 (VLESS/Trojan)、线路 (IEPL)、地区 (香港/日本)..."
+          autocomplete="off"
+        />
+        <span id="searchCount" class="search-counter">显示 42 / 42 家</span>
+      </div>
+
+      <div class="filter-controls">
+        <div class="filter-tags" id="filterTags">
+          <button class="filter-tag active" data-filter="all">全部 (42)</button>
+          <button class="filter-tag" data-filter="iepl">⚡ IEPL/专线旗舰</button>
+          <button class="filter-tag" data-filter="budget">💰 平价实惠 (≤¥15/月)</button>
+          <button class="filter-tag" data-filter="permanent">♾️ 永久不限时/按量</button>
+          <button class="filter-tag" data-filter="ai">🤖 AI/ChatGPT专属</button>
+          <button class="filter-tag" data-filter="client">📱 官方自研客户端</button>
+        </div>
+
+        <div class="sort-box">
+          <label for="sortSelect">排序：</label>
+          <select id="sortSelect">
+            <option value="rank">默认推荐排名</option>
+            <option value="price-asc">入门价格从低到高</option>
+            <option value="year-desc">运营年限从久到新</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Airport Brand Cards List -->
+    <section class="cards-list" id="airportsList">
+      <!-- C-Position Highlight Card -->
+      <div class="brand-item" data-tags="iepl,ai,client,permanent" data-rank="1" data-price="8" data-year="2020" data-name="光速云 guangsu">
+        <AirportCard airport={featuredBrand} lang={currentLang} />
+      </div>
+
+      <!-- Rest 41 Brands -->
+      {otherBrands.map((brand) => {
+        // Tag classifier for dynamic filtering
+        const tags: string[] = [];
+        if (brand.lineType.includes("IEPL") || brand.lineType.includes("IPLC") || brand.lineType.includes("专线")) tags.push("iepl");
+        const priceNum = parseFloat(brand.startingPrice.replace(/[^0-9.]/g, "")) || 20;
+        if (priceNum <= 15) tags.push("budget");
+        if (brand.plans.some((p) => p.period.includes("不限时") || p.period.includes("不过期") || p.billing.includes("一次性"))) tags.push("permanent");
+        if (brand.streamingUnlock.chatgpt === "yes" && brand.streamingUnlock.claude === "yes") tags.push("ai");
+        if (brand.hasDedicatedClient) tags.push("client");
+
+        return (
+          <div
+            class="brand-item"
+            data-tags={tags.join(",")}
+            data-rank={brand.rank}
+            data-price={priceNum}
+            data-year={brand.establishedYear}
+            data-name={`${brand.name} ${brand.slug}`}
+          >
+            <AirportCard airport={brand} lang={currentLang} />
+          </div>
+        );
+      })}
+    </section>
+
+    <!-- Empty State -->
+    <div id="noMatchMessage" class="no-match-box hidden">
+      <p>🔍 没有找到匹配的机场品牌，请尝试更换关键词或重置筛选标签。</p>
+      <button type="button" id="resetFilterBtn" class="btn-reset">重置所有筛选</button>
+    </div>
+
+    <!-- SEO Thematic Knowledge & FAQ -->
+    <article class="hub-seo-faq border-shadow">
+      <h2>💡 42家机场选购指南与避坑白皮书</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>1. 什么是 IEPL 专线？为什么晚高峰不卡顿？</h3>
+          <p>
+            IEPL（International Ethernet Private Line，国际以太网专线）属于物理层面的点对点跨境内网通信专线，数据在境内入口机房（如深圳、上海）汇聚后，直接通过物理专线内网传输至境外落地机房（如香港、日本）。整个过程<strong>不经过国家公网骨干防火墙 GFW</strong>，因此彻底免疫晚高峰骨干网国际出口拥堵、QoS 限速及大面积封锁丢包。
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>2. 为什么 ChatGPT 4o / Claude 3.5 频繁报错 Access Denied？</h3>
+          <p>
+            OpenAI 与 Anthropic 对 IP 地址实施了极其严苛的商用风控探测。绝大多数廉价中继使用的云服务器数据中心机房 IP（如 DigitalOcean、Linode、Vultr 等）已被直接拉入黑名单。高品质机场（如光速云、西风等）在出口端部署了优质的<strong>住宅原生原生 IP / 动态商宽 Clean IP</strong>，能确保 ChatGPT Canvas、Claude Artifacts 顺畅调用不封号。
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>3. 永久不限时套餐适合哪些用户？</h3>
+          <p>
+            常规机场多采用按月/年重置流量的订阅制，对于轻度查阅资料、出差旅行或将梯子作为<strong>主力专线失联后的应急备用节点</strong>的用户来说，按月付费容易造成流量浪费。光速云推出的「致敬斯诺克147永久套餐（¥147/247GB不过期）」与老狗云按量计费套餐，购买后流量永久有效，是极客用户的必备防断联救生圈。
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>4. 为什么本站所有机场链接均包含合规属性？</h3>
+          <p>
+            protonVPN 遵循国际互联网前沿 SEO 与网络安全规范，本站评测的所有官方直达通道均标注 <code>rel="nofollow sponsored noopener"</code>，确保外链传递合规透明。本站坚持<strong>真机实测优先原则</strong>，所有推荐均基于晚高峰实际网络吞吐与连通可用率，绝不夸大与虚标。
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</RootLayout>
+
+<script>
+  function setupAirportsFilter() {
+    const searchInput = document.getElementById("airportSearchInput") as HTMLInputElement;
+    const filterTags = document.querySelectorAll("#filterTags .filter-tag");
+    const sortSelect = document.getElementById("sortSelect") as HTMLSelectElement;
+    const cardsList = document.getElementById("airportsList");
+    const items = Array.from(document.querySelectorAll<HTMLElement>(".brand-item"));
+    const searchCount = document.getElementById("searchCount");
+    const noMatchMessage = document.getElementById("noMatchMessage");
+    const resetBtn = document.getElementById("resetFilterBtn");
+
+    if (!searchInput || !cardsList || !items.length) return;
+
+    let activeFilter = "all";
+    let searchKeyword = "";
+    let activeSort = "rank";
+
+    function applyFilterAndSort() {
+      let visibleCount = 0;
+
+      items.forEach((item) => {
+        const itemTags = (item.getAttribute("data-tags") || "").split(",");
+        const itemName = (item.getAttribute("data-name") || "").toLowerCase();
+
+        // Check filter tag
+        const matchTag = activeFilter === "all" || itemTags.includes(activeFilter);
+
+        // Check keyword
+        const matchSearch =
+          !searchKeyword ||
+          itemName.includes(searchKeyword) ||
+          item.innerText.toLowerCase().includes(searchKeyword);
+
+        if (matchTag && matchSearch) {
+          item.style.display = "";
+          visibleCount++;
+        } else {
+          item.style.display = "none";
+        }
+      });
+
+      // Update counter
+      if (searchCount) {
+        searchCount.textContent = `显示 ${visibleCount} / ${items.length} 家`;
+      }
+
+      // Empty state
+      if (noMatchMessage) {
+        if (visibleCount === 0) {
+          noMatchMessage.classList.remove("hidden");
+        } else {
+          noMatchMessage.classList.add("hidden");
+        }
+      }
+
+      // Sorting
+      const visibleItems = items.filter((el) => el.style.display !== "none");
+      visibleItems.sort((a, b) => {
+        if (activeSort === "price-asc") {
+          const pA = parseFloat(a.getAttribute("data-price") || "0");
+          const pB = parseFloat(b.getAttribute("data-price") || "0");
+          return pA - pB;
+        } else if (activeSort === "year-desc") {
+          const yA = parseInt(a.getAttribute("data-year") || "2020", 10);
+          const yB = parseInt(b.getAttribute("data-year") || "2020", 10);
+          return yB - yA;
+        } else {
+          // Default rank
+          const rA = parseInt(a.getAttribute("data-rank") || "99", 10);
+          const rB = parseInt(b.getAttribute("data-rank") || "99", 10);
+          return rA - rB;
+        }
+      });
+
+      // Re-append in sorted order
+      visibleItems.forEach((el) => cardsList?.appendChild(el));
+    }
+
+    // Event listeners
+    searchInput.addEventListener("input", (e) => {
+      searchKeyword = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      applyFilterAndSort();
+    });
+
+    filterTags.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        filterTags.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeFilter = btn.getAttribute("data-filter") || "all";
+        applyFilterAndSort();
+      });
+    });
+
+    sortSelect?.addEventListener("change", (e) => {
+      activeSort = (e.target as HTMLSelectElement).value;
+      applyFilterAndSort();
+    });
+
+    resetBtn?.addEventListener("click", () => {
+      searchInput.value = "";
+      searchKeyword = "";
+      activeFilter = "all";
+      activeSort = "rank";
+      sortSelect.value = "rank";
+      filterTags.forEach((b) => {
+        if (b.getAttribute("data-filter") === "all") b.classList.add("active");
+        else b.classList.remove("active");
+      });
+      applyFilterAndSort();
+    });
+  }
+
+  setupAirportsFilter();
+  document.addEventListener("astro:page-load", setupAirportsFilter);
+</script>
+
+<style>
+  .airports-hub-container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-4);
+  }
+
+  .breadcrumb-nav a {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .breadcrumb-nav a:hover {
+    color: var(--primary);
+  }
+
+  .breadcrumb-nav .sep {
+    color: var(--border);
+  }
+
+  .breadcrumb-nav .current {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .hub-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .hub-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .pill-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .pill-glow {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .pill-success {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  .hub-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    margin: var(--space-2) 0;
+    line-height: 1.25;
+    color: var(--foreground);
+  }
+
+  .hub-intro {
+    font-size: var(--font-size-md);
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .metrics-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3);
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .metric-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: var(--font-family-monospaced);
+    color: var(--foreground);
+  }
+
+  .metric-val.highlight {
+    color: var(--primary);
+  }
+
+  .metric-val.status-green {
+    color: #10b981;
+  }
+
+  .metric-lbl {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-top: 2px;
+  }
+
+  /* Filter Section */
+  .filter-section {
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .search-box-wrap {
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-3);
+    transition: border-color var(--duration);
+  }
+
+  .search-box-wrap:focus-within {
+    border-color: var(--primary);
+  }
+
+  .search-icon {
+    font-size: 1rem;
+    margin-right: var(--space-2);
+  }
+
+  #airportSearchInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: var(--space-3) 0;
+    font-size: var(--font-size-sm);
+    color: var(--foreground);
+    outline: none;
+  }
+
+  .search-counter {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    padding-left: var(--space-2);
+  }
+
+  .filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .filter-tag {
+    font-size: 0.75rem;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--foreground);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--duration), border-color var(--duration), color var(--duration);
+  }
+
+  .filter-tag:hover {
+    border-color: var(--primary);
+  }
+
+  .filter-tag.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .sort-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .sort-box select {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--foreground);
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* List & Cards */
+  .cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .no-match-box {
+    text-align: center;
+    padding: var(--space-8) var(--space-4);
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    margin: var(--space-4) 0;
+  }
+
+  .no-match-box.hidden {
+    display: none;
+  }
+
+  .btn-reset {
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+  }
+
+  /* FAQ */
+  .hub-seo-faq {
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-top: var(--space-8);
+  }
+
+  .hub-seo-faq h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: var(--space-4);
+    color: var(--foreground);
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .faq-item {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .faq-item h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: var(--space-2);
+    color: var(--foreground);
+  }
+
+  .faq-item p {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin: 0;
+  }
+</style>

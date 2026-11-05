@@ -1,0 +1,22 @@
+---
+title: "DNS Leak Prevention & DoH Secure Resolution Masterclass"
+summary: "Preventing ISP DNS hijacking and WebRTC public IP exposure with encrypted DoH resolvers and strict routing policies."
+translationKey: "dns-leak"
+date: "2025-01-15T15:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["DNS Leak", "WebRTC", "DoH", "Security", "Privacy"]
+categories: ["Security"]
+language: "en-US"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: false
+---
+
+## Understanding DNS Leaks
+
+Even with active proxies, unencrypted UDP port 53 DNS queries routed to local ISP servers can completely expose your browsing destination and location.
+
+### Core Defense Mechanisms
+
+1. **Deploying DNS over HTTPS (DoH)**: Encrypt DNS queries inside standard TLS packets (`https://1.1.1.1/dns-query` or `https://8.8.8.8/dns-query`).
+2. **Mitigating WebRTC IP Leaks**: Disabling browser STUN leaks that bypass virtual network interfaces.

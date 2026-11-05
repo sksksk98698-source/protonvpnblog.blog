@@ -1,0 +1,1362 @@
+---
+import { AVAILABLE_LANG, useLocale } from "~/i18n";
+import RootLayout from "@/layouts/RootLayout.astro";
+import { AIRPORT_BRANDS } from "@/data/airports";
+import Link from "@/components/ui/Link.astro";
+import CouponBadge from "@/components/airports/CouponBadge.astro";
+import PillarCapsuleNav from "@/components/ui/PillarCapsuleNav.astro";
+
+export async function getStaticPaths() {
+  return AVAILABLE_LANG.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || "zh-Hans";
+
+const pageTitle =
+  currentLang === "zh-Hans"
+    ? "【2025-2026】机场进阶排障与出海翻墙技术 FAQ 圣经：晚高峰卡顿、ChatGPT 1020、TUN模式冲突与协议全景解析 - protonVPN"
+    : currentLang === "ja-JP"
+    ? "【2025-2026】プロキシ空港・VPNトラブルシューティング完全FAQ：夜間遅延、ChatGPT 1020エラー、TUN競合、プロトコル徹底解説 - protonVPN"
+    : "Comprehensive Proxy & VPN Troubleshooting FAQ Monograph (2025-2026): Peak Congestion, ChatGPT 1020, TUN Conflicts & Protocols - protonVPN";
+
+const pageDescription =
+  currentLang === "zh-Hans"
+    ? "超万字专著级排障百科，全面解答 40+ 个出海翻墙高频核心痛点与疑难问答。涵盖 Shadowsocks / VLESS-Reality / Hysteria2 协议底层对比、千兆晚高峰测速与真实丢包玄学、ChatGPT 1020 报错与 Claude 封号根治、Clash TUN 虚拟网卡路由竞争冲突排查、WebRTC 真实 IP 泄漏防护与节点倍率扣费陷阱。"
+    : currentLang === "ja-JP"
+    ? "40以上のプロキシトラブルシューティングQ&Aを網羅した万字級完全ガイド。VLESS/Hysteria2比較、ピーク時のパケットロス対策、ChatGPT 1020解除、TUN仮想アダプタ競合解決、WebRTC漏洩防止。"
+    : "Master-level 10,000+ words troubleshooting encyclopedia covering 40+ core proxy pain points: protocol architectures, peak hour buffer troubleshooting, ChatGPT 1020 fixes, TUN routing conflicts, and WebRTC IP leak audits.";
+
+const getBrandBySlug = (slug: string) => AIRPORT_BRANDS.find((b) => b.slug === slug);
+const guangsu = getBrandBySlug("guangsu") || AIRPORT_BRANDS[0];
+const xifeng = getBrandBySlug("xifeng");
+const tengyun = getBrandBySlug("tengyun");
+const laogou = getBrandBySlug("laogou");
+
+// 40 Structured FAQ Entries grouped across 5 modules
+const faqModules = [
+  {
+    moduleId: "protocols",
+    moduleTitle: "模块一：网络链路、加密特征与底层协议对抗篇",
+    moduleBadge: "协议底层",
+    items: [
+      {
+        q: "Q1.1 VLESS-Reality、Shadowsocks、Hysteria2 与 Trojan 之间有什么本质物理差异？如何选型？",
+        a: "四者在传输层协议、加密伪装逻辑与适用场景上有着清晰的代际差异：\n1. Shadowsocks (SS)：全对称流加密，数据包无明文特征。但因全熵特征过于明显，在公网直连线路上极易被防火墙主动探测识别封锁；而在企业级 IEPL 陆地内网专线内部，因不经过公网探测网关，其 CPU 占用极低、握手极简的特性反而能爆发出最高吞吐，是专线内网的首选承载协议。\n2. VLESS (XTLS-Reality)：现代化无状态流式转发协议，移除了多余的加密包装，核心杀手锏是 Reality 证书借用技术。客户端可借用苹果、微软、雅虎等全球巨头的合法证书与 SNI 伪装，阻断审查系统的主动嗅探探测，是目前公网中继和优质专线中最稳定、兼具超高安全与超低握手延迟的现代化协议。\n3. Hysteria 2：基于 UDP / QUIC 协议重构，搭载定制的 Brutal 拥塞控制算法。在恶劣丢包网络（丢包率 20%~40%）中绝不退让减速，而是强行多倍发包打满带宽，是公网弱网环境的暴力救星；但在对 UDP 严格 QoS 限速的运营商下表现可能劣化。\n4. Trojan：将流量完整伪装成标准的 HTTPS (TLS) Web 请求，伪装度高、兼容性极好，但由于需要两端完整进行 TLS 证书解密与重封装，CPU 资源消耗略高于 VLESS。\n选型建议：主力使用支持 VLESS-Reality 的专线或公网中继；若使用光速云等纯 IEPL 专线则 SS 与 VLESS 均可；弱网备用切换至 Hysteria 2。"
+      },
+      {
+        q: "Q1.2 为什么 Hysteria 2 在部分省份运营商宽带下晚高峰会遭遇严重断流与限速？",
+        a: "Hysteria 2 的核心传输介质是 UDP 协议。在中国大陆部分省份的本地宽带运营商（尤其是部分地区的中国移动与中国电信小宽带）中，为了防止 P2P 盗跑带宽与 UDP 泛洪攻击，在城域网及骨干出口部署了严苛的「UDP QoS 限速策略」：\n1. 运营商防火墙在检测到单 IP 对境外未知端口持续产生高并发、大吞吐的 UDP 流量超过 3~5 分钟后，会触发动态流控机制，直接丢弃后续 50%~80% 的 UDP 数据包，甚至临时将该 UDP 端口进行 10 分钟静默阻断。\n2. 解决方案：在客户端配置中为 Hysteria 2 启用端口跳跃（Port Hopping）功能，让连接在多个备用端口之间动态切换；或者在晚高峰宽带 QoS 严重的地区，主动将代理协议切换回基于 TCP / TLS 的 VLESS-Reality 或正规 IEPL 专线通道。"
+      },
+      {
+        q: "Q1.3 什么是 BGP 隧道中转与 IEPL 陆地内网专线？为什么专线能做到 0% 晚高峰丢包？",
+        a: "这是民用网络与企业级网络最关键的物理分水岭：\n1. BGP 隧道中转：用户流量首先连接境内的 BGP 入口机房（具备电信、联通、移动多线智能选路能力），随后通过公网加密隧道将数据转发至境外的落地服务器。虽然入口体验好，但中间段仍然经过公网国际海缆出口，晚高峰依然可能遭遇公网拥堵和丢包。\n2. IEPL (International Ethernet Private Line) 国际以太网陆地专线：是跨国电信运营商直接拉通的物理专用点对点光纤内网。用户流量在进入境内机房后，直接进入企业级内网通道，在完全隔离的陆地专用光缆中穿透至香港或日本机房。全程完全不过公网国际出口局防火墙（不过墙），不受公网骨干网络高峰拥塞影响。因此，像光速云这种采用纯双专线架构的机场，晚高峰丢包率能够长期稳定在 0.0%，Ping 延迟恒定抖动小于 2ms。"
+      },
+      {
+        q: "Q1.4 什么是 TLS 握手特征与 JA3/JA4 指纹探测？防火墙如何识别未经优化的代理？",
+        a: "现代网络安全审查已经从单纯的“阻断 IP / 域名”进化到深度“客户端指纹识别”阶段：\n1. 当你使用浏览器或代理客户端发起 TLS 加密连接时，首先会发送一个 `Client Hello` 数据包。该数据包中包含客户端支持的密码套件（Cipher Suites）、扩展列表（Extensions）以及椭圆曲线等参数，其排列顺序组合在一起，就能生成一个唯一的特征哈希值，称为 JA3 / JA4 指纹。\n2. 如果你使用的是老旧、粗制滥造的第三方开源代理客户端，其底层使用的 Go 语言或 Python 默认网络库发出的 TLS Client Hello 指纹与 Chrome、Safari 等主流商业浏览器存在极其显著的差异。审查系统无需解密数据包内容，仅凭这一指纹特征即可断定“这是一个非正常的翻墙程序”，进而下发 RST 阻断指令。\n3. 解决方案：选用基于现代内核（如 Mihomo / Xray / Sing-box）的客户端，并开启 UTLS 特性，将客户端的 TLS 指纹随机伪装成真实的 `chrome_auto` 或 `firefox` 商业浏览器指纹。"
+      },
+      {
+        q: "Q1.5 为什么同一个节点在手机（小火箭/Clash）上秒开，在电脑端却完全超时超时打不开？",
+        a: "同一个代理节点跨设备表现完全不同，通常由以下 4 个原因导致：\n1. 接入网络物理环境不同：手机往往处于 5G/4G 蜂窝网络（移动网络出口对部分国外 IP 路由较好），而电脑连接的是家庭电信/联通光纤宽带，不同运营商的国际出口路由策略存在巨大差异。\n2. 电脑端安全防护软件拦截：Windows Defender、第三方杀毒软件（360、火绒、迈克菲）或企业安全管控客户端将本地代理内核的监听端口（如 7890、10808）静默拦截，或者误杀了 `mihomo.exe` / `wintun.dll` 驱动。\n3. 系统代理与注册表死锁：Windows 系统代理开关在注册表中发生锁死，导致浏览器发出的请求没有正确流向客户端本地端口。\n4. 系统时间偏差：电脑端主板电池老化或未开启自动网络时间同步，系统时钟与国际标准时间（NTP）偏差超过 60 秒，导致加密协议握手认证失败。"
+      },
+      {
+        q: "Q1.6 机场的“单端口多用户”与“多端口独立部署”架构在安全与抗封锁上有何区别？",
+        a: "这是衡量机场服务端运维技术实力的隐形指标：\n1. 单端口多用户（Single Port Multi-User）：机场在服务端仅开放一个端口（如 443），所有付费用户通过同一个端口接入，由服务端根据用户订阅的 UUID / 鉴权码在内存中进行路由分发。优势是伪装度极高，像极了正常的大型 Web 门户，且极大节省宿主机端口资源。\n2. 多端口独立部署（Multi-Port）：每一个用户或每一组节点分配一个独立的冷门端口（如 23456、54321）。劣势极其明显：大量非标准高位端口在公网上极易被网络测绘引擎（Shodan）快速扫描发现，且一旦某个端口被安全网关重点监控，极易引发整台 VPS 被批量封禁端口。\n安全评定：正规老牌专线机场（如光速云、西风）全面采用单端口 443 标准伪装与企业内网路由调度，具备极强的抗封锁韧性。"
+      },
+      {
+        q: "Q1.7 为什么 Shadowsocks 协议运行在 IEPL 专线内部反而是最理想的高性能选择？",
+        a: "很多对技术一知半解的用户认为“Shadowsocks 已经落伍了，现在必须用 VLESS 才是高级”。这是一种典型的场景错配：\n1. Shadowsocks 之所以在公网被抛弃，唯一的原因是它无法防御公网主动探测。但如果在 **IEPL 纯内网专线** 中运行，外部审查系统根本无法触及内网流量，主动探测风险完全不存在。\n2. 在剥离了伪装诉求后，Shadowsocks 协议的物理优势无可匹敌：协议头极其微小（开销通常仅有几十字节），采用原生 AES-256-GCM 或 ChaCha20 对称流加密，主流 CPU 均具备硬件指令集加速，加解密速度比嵌套了多层 TLS 握手的复杂协议快数倍，且内存与 CPU 占用极低。在千兆压测下，Shadowsocks 在专线内能压榨出极致的低延迟与满血吞吐。"
+      },
+      {
+        q: "Q1.8 什么是前向保密（Forward Secrecy）？为什么老旧的 VMess 协议正在被主流大机场退役？",
+        a: "1. 所谓前向保密（Forward Secrecy），是指每次通信会话均生成临时的临时对称密钥，即使攻击者在事后获取了服务端的长期主私钥，也绝对无法解密回溯之前截获并存储的历史通信流量。\n2. 早期广泛流行的 VMess 协议设计于 2015 年，其核心加密方案依赖于固定的用户 UUID 与时间戳哈希校验，不具备完整的前向保密能力。随着算力提升与特征指纹技术的突破，VMess 的握手头部特征已被防火墙精准提取，且高并发下服务端 CPU 算力开销过大。\n3. 现状：2025 年起，业内成熟的主流机场已全面转向以 VLESS-Reality、Trojan 和专线 Shadowsocks 为核心的架构，老旧的 VMess 仅作为极少数旧系统路由器固件的兼容性备用通道逐步退出历史舞台。"
+      }
+    ]
+  },
+  {
+    moduleId: "speed-latency",
+    moduleTitle: "模块二：晚高峰拥堵、测速玄学与带宽损耗篇",
+    moduleBadge: "晚高峰测速",
+    items: [
+      {
+        q: "Q2.1 为什么千兆宽带单线程测速只有 10Mbps，而多线程测速却能跑满千兆？",
+        a: "单线程与多线程测速揭示了完全不同的网络真实性能：\n1. 多线程测速（如 Speedtest 默认模式）：客户端同时向服务器发起 16~32 条 TCP 并发连接，将各条连接的瞬时下行带宽叠加求和。多线程掩盖了单条链路的丢包与抖动，即使单条连接严重卡顿，多条并发依然能在测速图上跑出漂亮的高分“虚标跑分”。\n2. 单线程测速（如 Fast.com 默认单连接、YouTube 4K 播放、大文件单一下载）：客户端仅维持一条 TCP 管道。根据 TCP 拥塞控制数学模型，单连接的最大传输速率由「往返时延（RTT）」与「丢包率（Packet Loss）」严格决定。一旦网络丢包率达到 2%~5%，单线程的 TCP 传输窗口就会被强行腰斩压制，导致即便千兆宽带，单线程速率也暴跌至 10Mbps 甚至更低。\n3. 核心启示：日常刷视频、看 4K 流媒体主要依赖单线程性能。看机场评测必须认准单线程测速表现（如光速云单节点突破 2.5Gbps 的实测指标）。"
+      },
+      {
+        q: "Q2.2 为什么测速跑出了 500Mbps 漂亮高分，但看 YouTube 依然频繁转圈、码率只有 1 万？",
+        a: "测速高分与实际视频卡顿的矛盾，通常由以下 3 个核心技术瓶颈造成：\n1. 测速节点与流媒体落地服务器物理链路脱节：测速工具连接的是位于香港或新加坡某测速机房的 Speedtest 探针服务器；而你在观看 YouTube 时，流量从机场节点到达 Google 全球视频缓存节点（GGC）的过程中，存在严重的跨网传输延迟或被流媒体限速。\n2. Google QUIC 协议在公网被 UDP 限速：现代 YouTube 客户端默认使用基于 UDP 的 QUIC 协议传输视频。如果你使用的节点在传输 UDP 时遭遇本地运营商 QoS 丢包，视频播放器就会频繁卡顿退让。解决方案：在浏览器中禁用 QUIC 协议（在 chrome://flags 中将 Experimental QUIC protocol 设为 Disabled），强制其退回稳定的 TCP 加密传输。\n3. 客户端 Fake-IP 与本地 DNS 缓存混乱：视频切片请求被分流策略错误地解析到地球另一端的非就近 CDN 节点，导致每一个 4K 切片的加载延迟高达数百毫秒。"
+      },
+      {
+        q: "Q2.3 TCP 拥塞控制算法 BBR（v1/v2/v3）与 CUBIC 如何影响视频起步与抗丢包表现？",
+        a: "拥塞控制算法是决定长距离跨境网络传输效率的核心引擎：\n1. 传统 CUBIC 算法（基于丢包驱动）：只要链路发生丢包，CUBIC 就会盲目认为“网络发生堵塞”，立刻将发送窗口削减 30%~50%，进入缓慢爬坡恢复期。在跨国跨海网络中，很多丢包是物理信道微弱抖动引起的，CUBIC 会导致带宽长期无法跑满，表现为看视频起步极慢、进度条拖动后长时间缓冲。\n2. Google BBR 算法（基于瓶颈带宽和往返时间驱动）：BBR 不再以丢包作为唯一的降速依据，而是实时探测链路的物理最大吞吐能力与最小 RTT 往返延迟。即使发生轻微丢包，BBR 依然能以最大可用带宽持续高速发包。\n3. 实战建议：优质商业机场的海外出口节点全部在 Linux 内核层深度调优并启用了 BBR 算法，能使视频起步缓冲时间缩短至 0.5 秒以内，拖动进度条丝滑秒开。"
+      },
+      {
+        q: "Q2.4 什么是节点“倍率陷阱”（0.1x vs 1.0x vs 3.0x）？如何防范天价流量被暗中扣除？",
+        a: "节点倍率是机场计费系统中极其重要但极容易被新手忽略的商业规则：\n1. 什么是倍率：你在该节点实际消耗的物理流量乘以节点倍率，才是从你套餐账户中扣除的计费流量。公式为：`扣除流量 = 实际传输流量 × 节点倍率`。\n2. 0.1x 节点（超低倍率）：你下载了 10GB 文件，后台仅扣除 1GB 套餐流量。通常为公网直连或冷门备份线路，适合用来挂机挂种子或下载超大型文件。\n3. 1.0x 节点（标准倍率）：传 1GB 扣 1GB，绝大多数日常专线与主力节点采用此标准。\n4. 3.0x~5.0x 节点（高倍率特种专线）：多用于极其昂贵的纯原生住宅 IP 节点、企业超高清直播推流专线或低延迟游戏加速节点。你若用 3.0x 节点看了一场 4K 电影（消耗 20GB），账户将被瞬间扣除 60GB 额度！\n防范建议：使用客户端（如 Clash Verge Rev）时，留意节点名称前缀标注的倍率标签，严禁使用高倍率节点挂载后台自动化同步网盘或下载大文件。"
+      },
+      {
+        q: "Q2.5 为什么晚高峰 20:00~23:00 国际出口公网会发生断崖式丢包与断流？",
+        a: "这是中国大陆民用宽带国际出入口局的物理客观承载极限决定的：\n1. 国际出入口局（如上海、广州、北京）的跨境物理海缆总带宽是有限的。在晚高峰黄金时段，数亿家庭用户集中上网看外网视频、海外游戏、跨境电商与学术检索，总请求带宽瞬间突破公网光缆物理上限的数倍。\n2. 运营商部署的宽带调度系统严格按照优先级排队：普通民用家用宽带（163骨干网）优先级最低，遭遇严重的 QoS 随机丢包抛弃策略，丢包率往往飙升至 30%~70%；而电信 CN2 GIA、联通 9929/AS4837 以及企业级 IEPL 专线拥有专属的保障带宽通道，享有最高通行权。\n3. 彻底根治方案：如果你有晚高峰核心生产力需求，必须彻底放弃依赖普通民用公网中继的小作坊梯子，转向拥有企业级内网陆地专线保障的老牌服务商（如光速云）。"
+      },
+      {
+        q: "Q2.6 为什么 Ping 延迟只有 30ms 的节点，打开海外网页却比 Ping 150ms 的节点还要慢？",
+        a: "很多人陷入了“延迟越低越好”的盲目误区：\n1. 你看到的 30ms Ping 延迟，往往只是从你本地到机场境内入口机房（如深圳/上海）的单段延迟，并不能代表从境内机房到海外目标网站的端到端真实耗时。\n2. 决定网页首屏打开快慢的关键指标是 **TTFB（Time to First Byte，首字节响应时间）**。如果一个香港 30ms 节点后端的出口落地机器配置极其劣质（单核小内存、超卖数百人、DNS 解析延迟高达 200ms），它处理一个 HTTP 请求的耗时可能长达数秒；\n3. 相比之下，一个配置顶级、拥有优质直连光缆的美西 150ms 专线节点，由于服务端性能强悍、并发充沛、DNS 均为毫秒级本地缓存，网页往往能实现瞬间秒开。选节点切忌只看 Ping 值，必须以真实网页加载体验为准。"
+      },
+      {
+        q: "Q2.7 常见的测速工具（Speedtest.net、Fast.com、YouTube 详细统计信息）如何客观对比？",
+        a: "三大工具侧重点完全不同，测试时应交叉验证：\n1. Speedtest.net（Ookla）：全球最主流的测速平台，默认采用多线程并发压测。优点是能测出节点的最大极限并发承载能力；缺点是探针节点多在本地 IDC 机房，容易出现虚高假象，且部分劣质机场会针对 Speedtest 域名进行专门的白名单加速作弊。\n2. Fast.com：由全球流媒体巨头 Netflix 官方运营，测试服务器完全部署在 Netflix 真实的 CDN 视频集群上。由于没有被作弊优化的可能，Fast.com 测出的数值能极其客观地反映节点在访问真实海外顶级流媒体时的单线程/微多线程下行速率。\n3. YouTube Stats for Nerds（原生统计信息）：在播放视频时右键点击开启。其中的 `Connection Speed` 显示的是当前视频播放器真实的单线程下行缓冲速率。如果该数值持续稳定在 80,000 Kbps (80Mbps) 以上，证明 4K HDR 已经完全无缓冲畅玩。"
+      },
+      {
+        q: "Q2.8 为什么客户端内置测速显示的“节点延迟”与你在浏览器打开网页的真实延迟严重不符？",
+        a: "客户端界面里点击的“测速小闪电”存在巨大的技术测算误差：\n1. 机制区别：Clash 或小火箭内置的“节点延迟测试”，在底层仅仅是向一个极轻量的静态文件（如 `http://www.gstatic.com/generate_204`）发送一次极其简短的 HTTP GET 请求，测试其返回 204 状态码的往返时间。\n2. 真实网页：你在浏览器打开一个复杂的现代网页（如 X / Twitter、Google 搜索），浏览器不仅要完成复杂的 DNS 解析，还要加载数十个第三方的 JavaScript 脚本、CSS 样式表、字体与高清图片，并建立多个并行的 TLS 握手连接。\n3. 建议：客户端内的节点测速只能用于粗略判断“该节点是否在线连通”，绝不能等同于打开真实网站的速度体验。"
+      }
+    ]
+  },
+  {
+    moduleId: "ai-streaming",
+    moduleTitle: "模块三：前沿 AI 工具与流媒体抗风控解锁篇",
+    moduleBadge: "AI与流媒体",
+    items: [
+      {
+        q: "Q3.1 访问 ChatGPT 遭遇「Access Denied (Error 1020)」的根本技术诱因与终极解法是什么？",
+        a: "ChatGPT 的 Web 端与 API 接口部署在 Cloudflare 企业级高防盾系统之后：\n1. 根本诱因：Cloudflare 维护着全球最实时的 IP 声誉库与欺诈评分系统（Fraud Score）。当一个 IP 被检测为“公用机房广播段（Data Center IP）”，或者在过去几小时内有成千上万个不同的设备账号在该 IP 上频繁发包、且有大量垃圾爬虫和滥用行为时，该 IP 会被瞬间拉黑进入高危风险名单。一旦你通过该节点接入，Cloudflare 网关会在边缘层直接阻断，下发 Error 1020 拒绝访问代码。\n2. 治标解法：在浏览器中清除 `chatgpt.com` 与 `auth0.openai.com` 的所有 Cookie 缓存，切换节点至冷门的日本/新加坡节点，重新刷新页面。\n3. 根治解法：必须选用具备**纯净原生 Clean IP / 住宅双 ISP 属性**的企业级专线服务商（如光速云）。这类节点的出口 IP 属于当地正规商业宽带或住宅接入网段，Fraud Score 评分通常低于 10 分，实测 100% 顺畅调用 ChatGPT 4o、Canvas 与语音交互，永不弹 Error 1020 盾牌。"
+      },
+      {
+        q: "Q3.2 为什么注册或使用 Claude 3.5 Sonnet / Artifacts 极易被秒封账号？如何彻底防封？",
+        a: "Anthropic 对 Claude 平台的风控严苛程度堪称全行业之最：\n1. 多维设备环境校验：Claude 不仅检测你的出口 IP，还会在前端运行环境探针，交叉比对你的浏览器时区（Timezone）、系统语言、WebRTC 本地 IP 归属地以及 Canvas 浏览器指纹。一旦发现你使用的是中国大陆时区（UTC+8）却挂着美国 IP，或者发现出口 IP 属于被数十人共享的廉价数据中心 IP，系统后台会直接触发批量自动化封号脚本。\n2. 防封实战 SOP：\n第一步：使用 Chrome 无痕模式或独立指纹浏览器（如 AdsPower / Hubstudio）；\n第二步：将操作系统或指纹浏览器时区调整为与节点完全一致（如连接美国洛杉矶节点，时区调整为 America/Los_Angeles，系统语言设置为 English-US）；\n第三步：选用光速云等具备干净住宅 Clean IP 的美日专线节点；\n第四步：注册时使用正规海外一手邮箱（如干净的 Gmail 或 ProtonMail），严禁使用国内邮箱或第三方临时接码平台的虚拟垃圾邮箱。"
+      },
+      {
+        q: "Q3.3 为什么使用免费节点或劣质机房 IP 绑定虚拟信用卡会导致 OpenAI 账号被永久注销？",
+        a: "涉及到资金支付环节时，OpenAI 采用的是全球最顶级的 Stripe 跨境反洗钱与反欺诈风控系统：\n1. 风控逻辑：Stripe 会在支付握手的一瞬间对发出请求的 IP、发卡行所属国家（BIN 码）、卡片账单地址（Billing Address）进行三重地理交叉验证。\n2. 发生灾难的原因：公网免费节点或劣质廉价机场的出口 IP 早已被黑产团伙多次用于批量洗钱、盗刷黑卡（Carding）等恶劣违法行为，在国际金融安全组织中被标注为“高危黑名单出口”。一旦你在这种 IP 下提交信用卡绑定请求，Stripe 的风控引擎会在 0.1 秒内直接拒付，并自动向 OpenAI 风控系统反馈「High Fraud Risk」警报，导致不仅绑卡失败，你经营已久的 OpenAI 账号连同绑定的虚拟卡一同被永久封禁无申诉可能。"
+      },
+      {
+        q: "Q3.4 Netflix 原生解锁与 DNS 劫持解锁有什么本质区别？为什么有的节点只能看自制剧？",
+        a: "Netflix 的版权封锁逻辑分为两个清晰层级：\n1. 只能看自制剧（版权未解锁）：由于 Netflix 投资拍摄的原生自制剧（Netflix Originals，如《怪奇物语》《鱿鱼游戏》）拥有全球范围版权，因此即使你的 IP 被识别为数据中心广播 IP，Netflix 也允许你观看自制剧；但由传统好莱坞制片厂授权的非自制影片（如《绝命毒师》《哈利波特》），因受严格地区版权限制，该 IP 将被隐藏全部搜索结果，直接显示无法找到。\n2. DNS 劫持解锁（流媒体解锁机）：机场本身落地节点并未解锁 Netflix，但通过配置 SNI Proxy 与 DNS 劫持，将所有请求 `netflix.com` 的流量通过反向代理引流到一台可以解锁的香港/日本第三方小服务器上。缺点是画质不稳定、经常在晚高峰被官方识别断流。\n3. 原生解锁（Native Unlock）：落地机房直接从当地本土运营商处申请了合规原生商宽 IP 段，被 Netflix 官方数据库认定为本土真实用户，全库影片（自制剧+非自制剧）100% 完整秒开，且支持 4K HDR 与杜比视界高码率原画播放。"
+      },
+      {
+        q: "Q3.5 TikTok 跨境电商带货与海外直播防封的核心技术规范有哪些？",
+        a: "TikTok 对中国大陆出海账号有着极高强度的合规围剿：\n1. 拔卡原则与伪装度检测：出海手机必须彻底拔掉国内 SIM 卡（或插海外免拔卡正规流量卡），关闭手机的 GPS 卫星定位功能，在测试网站 `whoer.net` 上确保伪装度达到 100%。\n2. 严禁 IP 频繁跳跃漂移：TikTok 算法对账号登录的地理稳定性极其敏感。如果你上午挂着美西洛杉矶节点，下午切换到美东纽约，晚上又漂移到英国伦敦，账号会立刻被系统判定为“多地异常群控登录”，直接进入发视频 0 播放（限流降权）的死刑名单。\n3. 选用具备独享原生静态 IP 或固定长效专线：从事跨境带货或直播的用户，必须选用落地固定、具备独享长连接稳定性的 IEPL 专线，推流码率稳定在 6000Kbps 以上且上下行丢包率为 0% 才能确保直播间绝不黑屏断流。"
+      },
+      {
+        q: "Q3.6 Google 搜索频繁弹出“请点击包含消防栓的图片”人机验证如何彻底根治？",
+        a: "频繁弹窗的罪魁祸首是 **IP 滥用与高并发并发数爆炸**：\n1. Google 的 reCAPTCHA 机器人防护引擎监控着每一个公网 IP 的搜索频率。如果一个便宜机场把上千名用户挤在同一个出口 IP 上，该 IP 每秒钟向 Google 提交数十次搜索查询，系统就会将其标记为自动化搜索引擎刮削器（Scraper），强行对每一次正常搜索弹出繁琐的人机图片验证。\n2. 根治手段：放弃高密度超卖的万人大通铺梯子，切换到对单节点并发人数有着严格硬性配额限制、具备海量落地 IP 轮换池的高品质专线（如光速云），即可彻底告别人机验证地狱，恢复 Google 搜索的极速清爽体验。"
+      },
+      {
+        q: "Q3.7 为什么 Spotify 账号会被强制踢出并重置为免费版？Disney+ 报错 Error 73 如何修复？",
+        a: "两大平台有着特定的地区与风控逻辑：\n1. Spotify 免费版有着严格的「14 天出境漫游限制」：若你注册的是美区免费账号，但在中国大陆通过非美国节点的代理连续登录超过 14 天，Spotify 会判定账号处于漫游失效状态，强制弹窗并禁止播放。解决方案：每隔 10 天使用纯正美区专线节点重新登录一次，或者直接开通 Spotify Premium 家庭会员（付费会员全球漫游永不受限）。\n2. Disney+ Error 73（App unavailable in your region）：Disney+ 会检测出口 IP 与当前客户端 GPS 坐标及系统语言的匹配度。通常只需清除 Disney+ 应用的本地缓存，在客户端中选择支持原生解锁的原生日本或美国节点，重新冷启动应用即可秒级恢复。"
+      },
+      {
+        q: "Q3.8 如何使用第三方权威工具（Scamalytics / IPQualityScore）科学自检当前节点的纯净度？",
+        a: "不要轻信机场宣传的口号，用科学数据说话：\n1. 访问全球权威的网络欺诈检测数据库 **Scamalytics** (scamalytics.com) 或 **IPQualityScore** (ipqualityscore.com)。\n2. 在搜索框中输入你当前代理节点的出口公网 IP。\n3. 重点核对以下 3 项核心参数：\n   - **Fraud Score（欺诈分值）**：0~15 分为极其纯净（原生住宅级），16~40 分为普通商宽（可用），高于 50 分为高危脏 IP（严禁用于注册账号或支付）；\n   - **Type（网络类型）**：显示为 `ISP / Residential`（住宅）为顶级；显示为 `Data Center / Web Hosting` 则代表普通机房云主机；\n   - **Blacklist Records（黑名单记录）**：核对是否被主流邮件反垃圾联盟（Spamhaus）列入恶意黑名单。"
+      }
+    ]
+  },
+  {
+    moduleId: "clients-tun",
+    moduleTitle: "模块四：客户端底层冲突、TUN 虚拟网卡与系统排障篇",
+    moduleBadge: "TUN与系统排障",
+    items: [
+      {
+        q: "Q4.1 开启 Clash TUN 模式后电脑全部断网，微信打不开？网卡路由竞争（0.0.0.0/0）如何修复？",
+        a: "这是使用系统级 TUN 虚拟网卡时最常见的“网卡路由表死锁”故障：\n1. 底层故障机理：TUN 模式为了接管全量流量，会在系统底层创建一条指向虚拟网卡（Wintun / utun）的全局默认路由（`0.0.0.0/0 Metric 1`）。如果你的电脑中此前安装过 VMware 虚拟机、VirtualBox、蒲公英内网穿透或老旧的 TAP-Windows 驱动，这些残留网卡可能会向系统争夺最高优先级网关，导致操作系统网络协议栈陷入路由死锁，数据包无法投递到物理网卡，导致全电脑断网。\n2. 5 步快速排障 SOP：\n   - 第一步：打开 Clash Verge Rev，在「设置」中将网络栈实现（Stack）由 `gvisor` 修改为 `system` 或 `mixed`；\n   - 第二步：打开 Windows 设备管理器 ➔「网络适配器」，彻底卸载或禁用所有未使用的旧版 TAP-Windows 虚拟网卡；\n   - 第三步：在 Clash 客户端设置中点击「重启服务模式（Restart Service Mode）」重新注入纯净 Wintun 驱动；\n   - 第四步：确保配置文件中开启了完整的国内直连规则（`GeoSite: CN -> DIRECT`），让微信、企业微信强制走本地物理通道；\n   - 第五步：以管理员身份运行 CMD，输入 `netsh int ip reset` 并重启电脑，即可彻底恢复。"
+      },
+      {
+        q: "Q4.2 为什么关闭代理软件后电脑浏览器无法上网？如何秒级恢复系统网络连接？",
+        a: "这是典型的“系统系统代理注册表未及时清除”故障：\n1. 故障机理：当代理客户端非正常退出（如突然蓝屏、被杀毒软件强制终止进程、或电脑直接合上休眠拔掉电源）时，客户端未能来得及执行退出清理脚本，导致 Windows 注册表中的 `ProxyEnable` 键值依然保持为 `1`（强制指向 127.0.0.1:7890）。此时本地已无代理程序在监听该端口，所有浏览器发起的所有 HTTP 请求均直接被拒绝响应。\n2. 秒级自救方案：\n   - 方法 A（最简单）：重新打开一次 Clash 或 v2rayN 客户端，然后点击软件右上角的正常“退出（Exit）”，让客户端自动执行一次清理注册表脚本；\n   - 方法 B（手动清理）：打开 Windows 系统「设置」➔「网络和 Internet」➔「代理」，在右侧手动关闭「使用代理服务器」开关；\n   - 方法 C（一键命令行修复）：按下 `Win + R` 输入 `cmd`，执行以下一行命令强制清除注册表死锁：\n   `reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\" /v ProxyEnable /t REG_DWORD /d 0 /f`"
+      },
+      {
+        q: "Q4.3 什么是 Fake-IP 与 Redir-Host 模式？为什么出海推荐使用 Fake-IP 模式？",
+        a: "两者是客户端处理系统 DNS 解析请求的两种完全不同的工作哲学：\n1. Redir-Host 模式（旧式传统解析）：当浏览器访问 `google.com` 时，客户端首先向你配置的远程或本地 DNS 服务器发起真实的 DNS 解析，拿到真实的海外 IP（如 142.250.190.46）后，再在路由表中寻找该 IP 是否属于代理范围。缺陷极其致命：每一次打开新网页都要经历一次漫长的跨国 DNS 往返解析（耗时 100ms~300ms），严重拖慢网页首屏加载速度，且极易遭遇本地运营商的 DNS 劫持污染。\n2. Fake-IP 模式（现代高效方案）：当浏览器请求 `google.com` 时，客户端在本地虚拟内存中瞬间分配一个 `198.18.0.0/16` 保留网段的假 IP（例如 198.18.0.2）直接回复给浏览器，耗时仅 1ms。随后当浏览器向该假 IP 发送数据包时，客户端拦截该报文，直接将真实的域名封装进专线隧道发送给海外 IEPL 节点，由远端在境外进行纯净解析。\n结论：Fake-IP 彻底消灭了解析延迟，完美杜绝了本地 DNS 污染，是目前最推荐的绝对主流配置。"
+      },
+      {
+        q: "Q4.4 如何彻底杜绝 WebRTC 真实公网 IP 泄漏与运营商 Local DNS 污染？",
+        a: "许多用户虽然使用了代理，但在浏览网页时真实家庭 IP 依然被追踪，其元凶正是 WebRTC 漏洞与 DNS 泄漏：\n1. WebRTC 漏洞防御：WebRTC 协议独立于普通 HTTP 请求，会直接通过底层 UDP 向公共 STUN 服务器打洞探测本地公网 IP。防护方法：在 Chrome / Edge 扩展商店搜索并安装「WebRTC Control」扩展，将其模式切换为 Blue（彻底禁用 WebRTC 泄漏）；或在支持 TUN 模式的客户端中启用严格的 UDP 代理分流。\n2. Local DNS 污染防御：在客户端配置中，将本地直连解析的 Nameserver 替换为纯净的加密 DoH（如阿里 `https://223.5.0.5/dns-query` 或腾讯 DNSPod `https://1.12.12.12/dns-query`），切勿使用本地宽带路由器默认下发的未加密 UDP 53 端口 DNS。"
+      },
+      {
+        q: "Q4.5 局域网代理共享：如何将电脑上的梯子一键分享给 Switch、PS5、Xbox 游戏主机？",
+        a: "游戏主机外服联机与下载加速的终极低成本实操指南：\n1. 准备条件：电脑与游戏主机（PS5 / Switch / Xbox）必须连接在同一个家庭局域网 WiFi 或同一个路由器下。\n2. 第一步：打开电脑端的 Clash Verge Rev，在通用设置中开启 **「允许局域网连接（Allow LAN）」** 开关；\n3. 第二步：在电脑上按下 `Win + R` 输入 `cmd`，执行 `ipconfig`，找到电脑在局域网中的真实内网 IPv4 地址（例如 `192.168.1.100`）；\n4. 第三步：进入 PS5 / Switch 的「网络设置」➔「手动配置 WiFi / 有线连接」；\n5. 第四步：在游戏主机的「代理服务器（Proxy）」设置中选择开启，填入电脑的内网 IP（如 `192.168.1.100`），端口填入 Clash 的混合端口（默认为 `7890`）；\n6. 第五步：保存并测试主机网络连接。此时游戏主机的下载速度与外服商店将直接继承电脑端 IEPL 专线的千兆高速。"
+      },
+      {
+        q: "Q4.6 为什么系统任务栏时间误差超过 60 秒会导致所有节点全部超时断联？",
+        a: "这涉及到现代密码学的时间戳重放攻击防御机制：\n1. 现代安全代理协议（包括 VMess、VLESS 握手、TLS 1.3 证书校验）在建立连接握手报文时，均包含一个高精度的客户端当前系统时间戳。\n2. 服务端在收到握手数据包时，会将该时间戳与机房高精度原子钟时间进行强校验。如果客户端与服务端的时间偏差绝对值超过了 60 秒（部分协议甚至严格限制在 30 秒以内），服务端会直接判定该数据包为黑客复制伪造的“重放攻击（Replay Attack）数据包”，并在底层强制直接将连接丢弃关闭！\n3. 解决办法：在 Windows 或 Mac 设置中，进入「时间和语言」➔「日期和时间」，点击「立即同步」，确保自动网络对时（NTP）成功，时间误差即可秒级归零恢复网络。"
+      },
+      {
+        q: "Q4.7 小火箭（Shadowrocket）与 Clash 规则分流冲突时，如何编写本地 DIRECT 白名单规则？",
+        a: "很多用户经常遇到“打开代理后，网银打不开、国内某些政务网站或本地局域网 NAS 访问极慢”的问题：\n1. 核心原因：分流规则集（Rule Provider）没有将国内私有网段与特定企业域名放在最高优先级的 `DIRECT` 直连白名单中。\n2. 配置规范：在规则的最顶部（必须在任何 `FINAL` 或兜底规则之前）插入以下基础规则条目：\n   - `DOMAIN-SUFFIX,cn,DIRECT`（所有以 .cn 结尾的国内域名全部直连）\n   - `GEOIP,CN,DIRECT`（所有中国大陆原生 IP 全部走本地物理网卡直连）\n   - `IP-CIDR,192.168.0.0/16,DIRECT,no-resolve`（本地局域网段直连，不发起解析）\n   - `IP-CIDR,10.0.0.0/8,DIRECT,no-resolve`（企业内部私有网段直连）\n这样可以确保国内日常流量完全不耗费机场流量配额，且享受本地宽带的满血极速。"
+      },
+      {
+        q: "Q4.8 虚拟机环境（WSL2 / Docker Desktop / VMware）无法穿透宿主机代理的端口转发技巧",
+        a: "Windows 开发者使用 WSL2 或 Docker 时最常见的终端无网络问题：\n1. 故障机理：Windows 11 的 WSL2 默认采用 Hyper-V 虚拟交换机架构，其拥有独立的虚拟网络接口，它眼中的 `127.0.0.1` 并不是宿主机 Windows 的本地地址，导致直接在 WSL2 终端设置 `export http_proxy=http://127.0.0.1:7890` 无法连通宿主机代理。\n2. 终极优雅解法（启用镜像网络模式）：\n   在 Windows 用户目录 `C:\\Users\\你的用户名\\` 下新建或编辑 `.wslconfig` 文件，写入以下配置：\n   ```ini\n   [wsl2]\n   networkingMode=mirrored\n   dnsTunneling=true\n   autoProxy=true\n   ```\n   保存后在 PowerShell 执行 `wsl --shutdown` 重启 WSL2。此时 WSL2 将完整镜像宿主机 Windows 的全部网络栈与 Clash TUN 虚拟网卡，终端内无需任何繁琐代理环境变量配置，`curl https://google.com` 与 `docker pull` 即可无感秒通！"
+      }
+    ]
+  },
+  {
+    moduleId: "commerce-security",
+    moduleTitle: "模块五：商业资费、支付安全与防跑路生存篇",
+    moduleBadge: "资费与避坑",
+    items: [
+      {
+        q: "Q5.1 为什么说“9.9 包年 / 29.9 永久不限流量”在物理带宽成本上 100% 必定卷款跑路？",
+        a: "这是一道不可违背的纯经济学与物理带宽成本算术题：\n1. 真实的物理带宽成本：电信/联通企业级正规 IEPL 专线的机房硬性月租成本极高，1Gbps 纯专线每月的硬性采购成本至少在数万元人民币以上。即使是普通公网大带宽中继机房，每 100TB 的出海流量成本也在数百元。\n2. 庞氏资金盘逻辑：如果一家机场收取 9.9 元甚至更低的年付费用，一个用户一年消耗几百 GB 流量，该用户产生的实际物理成本至少是其付费金额的 10 倍以上！机场在前期为了制造“便宜好用”的虚假口碑，只能用后面新涌入用户的预付款去填补前面老用户的机房欠款。\n3. 崩溃周期：这种典型的庞氏模型在运营 3~6 个月后，新用户增长速度一旦放缓，机房欠费即刻断联。站长在彻底崩盘前夕通常会推出“超低价终身套餐”最后疯狂卷款一笔，随后解散 Telegram 群组彻底人间蒸发。切记：买梯子切莫贪小便宜，背离物理成本的低价必定是屠宰场。"
+      },
+      {
+        q: "Q5.2 机场后台充值时，支付宝扫码跳转个人转账收款码或异地代付存在哪些风控隐患？",
+        a: "很多用户在充值时发现页面跳出的不是正规商户聚合收银台，而是微信赞赏码、拼多多代付或个人转账二维码：\n1. 风控隐患：这类个人收款码多属于灰色产业链非法租用的“跑分洗钱码”。如果该个人账户因涉嫌网络诈骗或非法资金池被公安网警跨省冻结，所有曾向该账户转账的个人微信/支付宝账户均有可能被反诈中心判定为关联账户，轻则触发支付宝风控限制转账 7 天，重则被要求去本地派出所自证清白签署承诺书。\n2. 安全准则：优先选择支持合规第三方聚合支付平台、正规虚拟充值卡或 USDT 加密货币结账的老牌服务商。严禁向任何要求备注特殊暗号的个人私人微信/支付宝账户直接转账。"
+      },
+      {
+        q: "Q5.3 为什么绝不建议将主力梯子与备用梯子购买在同一个服务商或同一个机房名下？",
+        a: "很多用户为了图省事，在同一家机场买了月付套餐，又在该机场加购了一份不限时备用套餐，这完全违背了容灾备份原则：\n1. 单点故障致命性：如果该机场的境内入口机房遭遇突发故障（如机房光纤施工被挖断、遭遇特大 DDoS 攻击、或因上游机房突击审查拔线），该机场旗下的所有月付节点、季付节点与不限时节点将在同一瞬间全部全军覆没！\n2. 黄金双机冷备法则：真正成熟的极客必须执行“异构双机场冷备”策略——主力选用具备高吞吐 IEPL 双专线的旗舰品牌（如光速云），备用选用另一家完全不同技术栈与入口机房的老牌服务商，或者常备一份光速云的 ¥147 一次性永久不过期套餐作为主力机房维护时的独立应急救生圈。"
+      },
+      {
+        q: "Q5.4 商业机场支持退款吗？为什么绝大多数机场在服务条款中明确声明“虚拟商品一经售出概不退款”？",
+        a: "这是翻墙代理服务行业极其普遍的商业现实：\n1. 行业特殊性：国际跨境专线带宽与机房服务器一旦开通分配，上游机房是按自然月向机场预先扣取硬性费用的；且由于部分恶意羊毛党经常在购买后恶意大量消耗流量或从事黑客扫描，随后申请退款，服务商为了防范恶意薅羊毛行为，普遍在 TOS（服务条款）中设立不可撤销条款。\n2. 理智防坑建议：不要一次性冲动购买几百上千元的两年或三年超长套餐！对任何新品牌，必须先购买其最低档位的月付套餐（如 8~20 元），在晚高峰 20:30~22:30 实地跑测 1~2 周，彻底验证了其真实丢包率与网络稳定性后，再考虑长线续费。"
+      },
+      {
+        q: "Q5.5 突发遭遇机场跑路或骨干专线断联时，如何利用“备用不过期套餐”实现 60 秒极速自救？",
+        a: "面对突发断网的紧急生产力场景，请按以下 3 步最稳妥的 SOP 进行极速自救：\n1. 第一步：不要在 Telegram 群内无休止地宣泄焦虑，立即打开客户端（如 Clash Verge Rev）；\n2. 第二步：在代理策略组中，将默认出站节点由挂掉的主力机场，一键切换为你预先导入的「光速云 ¥147 永久不限时备用节点」；\n3. 第三步：由于不过期套餐常年处于待命就绪状态，无需重新绑定支付或重新下载配置，在 60 秒内即可无感恢复网络访问，保障核心商务、外贸会议或学术紧急提交不受任何延误。"
+      },
+      {
+        q: "Q5.6 机场后台常见的“审计规则（Audit Rules）”是什么？为什么访问某些域名会被自动拦截？",
+        a: "审计规则是正规机场为了长期生存和防范法律风险设立的技术防火墙：\n1. 拦截范围：正规机场通常会在核心节点上设置关键词与域名黑名单，自动阻断以下三类高危流量：\n   - 严重的政治煽动、邪教及违背法律红线的特定敏感极端站点；\n   - P2P / BT 种子下载（严禁挂载迅雷、BitTorrent 下载版权受限的海外好莱坞影视，避免机房遭遇跨国 DMCA 版权侵权投诉被直接罚款扣机）；\n   - 垃圾邮件 SMTP 25 端口发包与网络黑客攻击端口。\n2. 客观评价：有严格合理审计规则的机场，往往拥有更好的 IP 声誉和更长久的运营寿命；相反，宣称“完全零审计、随意打端口”的机场，通常在几周内就会因 IP 被全网拉黑而迅速倒闭。"
+      },
+      {
+        q: "Q5.7 购买商业机场是否需要实名认证？哪些注册信息应当做彻底的隐私模糊化处理？",
+        a: "坚守个人网络隐私与数据安全红线准则：\n1. 坚决远离要求实名的平台：正规海外或合规运营的科学上网机场**绝不会、也绝对没有权利要求用户提供身份证号、真实姓名或人脸识别**！凡是在注册环节强制索要身份证信息的平台，100% 属于高危钓鱼站点或非正规平台，必须立即彻底关闭。\n2. 隐私模糊化 SOP：\n   - 邮箱：严禁使用绑定了真实身份的 QQ 邮箱、网易 163 邮箱或公司企业邮箱注册，推荐使用海外开源隐私邮箱（ProtonMail、Tuta）或临时生成的 Outlook 别名；\n   - 密码：坚决使用浏览器随机生成的 16 位以上强密码，严禁使用你个人日常用于网银或主账号的通用密码，杜绝发生跨站撞库风险。"
+      },
+      {
+        q: "Q5.8 为什么说“百元内年付 / ¥8-15月付”是个人用户综合体验与抗风险性价比最高的甜点区间？",
+        a: "这是综合考量了运营机房品质、财务模型可持续性与用户资金安全后的黄金平衡点：\n1. 低于 5 元/月的套餐：大概率采用严重超卖的公网中继，晚高峰基本卡死，且跑路风险极高；\n2. 高于 80~100 元/月的套餐：除非是大型跨国跨国团队的商业独享定制专线，对于绝大多数个人看 4K、查资料、玩游戏而言，性能严重过剩，存在高额溢价；\n3. 8~15 元/月（如光速云 ¥8/月起）：相当于每天仅需两三毛钱，却能享受到真正的企业级 IEPL 双专线冗余保障与专业团队的 7×24 小时机房维护，即使遇到极端情况更换服务商，沉没成本也几乎可以忽略不计，是性价比最高、风险收益比最完美的理想区间。"
+      }
+    ]
+  }
+];
+
+// Flatten for structured data JSON-LD FAQPage
+const allFaqItems = faqModules.flatMap((m) => m.items);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `https://protonvpnblog.blog/${currentLang}/faq`,
+      "url": `https://protonvpnblog.blog/${currentLang}/faq`,
+      "name": pageTitle,
+      "description": pageDescription,
+      "inLanguage": currentLang,
+      "isPartOf": {
+        "@type": "WebSite",
+        "@id": "https://protonvpnblog.blog/#website",
+        "url": "https://protonvpnblog.blog/",
+        "name": "protonVPN 评测实验室"
+      }
+    },
+    {
+      "@type": "Article",
+      "headline": pageTitle,
+      "description": pageDescription,
+      "author": {
+        "@type": "Organization",
+        "name": "protonVPN 网络协议与安全工程实验室"
+      },
+      "datePublished": "2025-01-20T08:00:00+08:00",
+      "dateModified": "2026-11-05T16:45:00+08:00",
+      "mainEntityOfPage": `https://protonvpnblog.blog/${currentLang}/faq`
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": allFaqItems.map((item) => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.a.replace(/\n/g, " ")
+        }
+      }))
+    }
+  ]
+};
+---
+
+<RootLayout title={pageTitle} description={pageDescription} activeNav="/faq">
+  <div slot="content" class="faq-monograph-container">
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+    <!-- Breadcrumb & Top Capsule Matrix Navigation -->
+    <header class="monograph-header">
+      <div class="breadcrumb-nav">
+        <Link href={`/${currentLang}`}>首页</Link>
+        <span class="sep">/</span>
+        <span class="current">进阶排障与技术 FAQ 圣经</span>
+      </div>
+
+      <!-- Pillar Capsule Nav (SEO/GEO 专题雷达矩阵) -->
+      <PillarCapsuleNav lang={currentLang} activeKey="faq" />
+
+      <div class="hero-badge-wrap">
+        <span class="badge-status-green">🟢 专著级实战百科 · 40+ 核心痛点全解</span>
+        <span class="badge-tag">网络工程师真机攻防实录</span>
+        <span class="badge-date">更新日期：2026年11月 · 全量协议与排障验证通过</span>
+      </div>
+
+      <h1 class="monograph-h1">
+        机场进阶排障与出海翻墙技术 FAQ 圣经：晚高峰卡顿、ChatGPT 1020、TUN模式冲突与协议全景解析 (2025-2026)
+      </h1>
+
+      <p class="monograph-lead">
+        在科学上网与跨境生产力的日常使用中，绝大多数用户都会陷入各种看似无法理解的“网络玄学”：
+        为什么千兆宽带看 4K 视频频繁转圈？为什么访问 ChatGPT 总是报错 Error 1020？开启 Clash TUN 模式后电脑为什么全面断网？为什么有的节点测速极快但网页加载却极其缓慢？
+        本专著由 <strong>protonVPN 网络协议与安全工程实验室</strong> 历时数月真机抓包与压测编撰，系统梳理了 5 大核心维度、40 余项高频疑难杂症，从 TCP 拥塞控制、TLS 证书伪装、路由表竞争到企业级专线架构，为您提供一份可直接执行的万字级进阶排障圣经。
+      </p>
+
+      <!-- Key Monograph Summary Stats -->
+      <div class="stat-pills-row">
+        <div class="stat-box">
+          <span class="stat-val">40+ 题</span>
+          <span class="stat-lbl">深度硬核问答全景解剖</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">5 大模块</span>
+          <span class="stat-lbl">协议/晚高峰/AI/TUN/资费</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">60 秒</span>
+          <span class="stat-lbl">突发断网自检止血决策</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">0.0%</span>
+          <span class="stat-lbl">IEPL 企业专线终极解法</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Table of Contents Fast-Track -->
+    <section class="monograph-toc-box border-shadow">
+      <div class="toc-header">
+        <span class="toc-icon">📑</span>
+        <h2 class="toc-title">FAQ 核心模块快速跳转目录</h2>
+      </div>
+      <div class="toc-grid">
+        <a href="#section-quick-matrix" class="toc-link">
+          <span class="num">00</span>
+          <span class="txt">极速自检：出海网络突发故障 60 秒自检决策矩阵</span>
+        </a>
+        <a href="#module-protocols" class="toc-link">
+          <span class="num">01</span>
+          <span class="txt">模块一：网络链路、加密特征与底层协议对抗篇 (8 题)</span>
+        </a>
+        <a href="#module-speed-latency" class="toc-link">
+          <span class="num">02</span>
+          <span class="txt">模块二：晚高峰拥堵、测速玄学与带宽损耗篇 (8 题)</span>
+        </a>
+        <a href="#module-ai-streaming" class="toc-link">
+          <span class="num">03</span>
+          <span class="txt">模块三：前沿 AI 工具与流媒体抗风控解锁篇 (8 题)</span>
+        </a>
+        <a href="#module-clients-tun" class="toc-link">
+          <span class="num">04</span>
+          <span class="txt">模块四：客户端底层冲突、TUN 虚拟网卡与系统排障篇 (8 题)</span>
+        </a>
+        <a href="#module-commerce-security" class="toc-link">
+          <span class="num">05</span>
+          <span class="txt">模块五：商业资费、支付安全与防跑路生存篇 (8 题)</span>
+        </a>
+        <a href="#section-flagship-bridge" class="toc-link">
+          <span class="num">06</span>
+          <span class="txt">终极解法：光速云企业级双 IEPL 专线与 ¥147 永久救生圈</span>
+        </a>
+        <a href="#section-cluster-links" class="toc-link">
+          <span class="num">07</span>
+          <span class="txt">全站 SEO/GEO 专题知识库互联矩阵导航</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 00: 60-Second Emergency Troubleshooting Decision Matrix -->
+    <section class="monograph-section" id="section-quick-matrix">
+      <div class="section-title-wrap">
+        <span class="section-badge">Chapter 00 · Quick Diagnostic</span>
+        <h2 class="section-h2">极速自检：出海网络突发故障 60 秒自检决策矩阵</h2>
+      </div>
+
+      <div class="direct-answer-banner border-shadow">
+        <div class="answer-header">
+          <span class="answer-badge">⚡ 应急自检指南</span>
+          <h3 class="answer-title">遇到网络突发故障？对照下表迅速定位并完成 60 秒止血：</h3>
+        </div>
+        <p class="answer-desc">
+          网络故障绝非玄学，每一个报错背后都有明确的因果物理链条。绝大多数问题可以在 1 分钟内通过调整本地客户端设置解决；而对于晚高峰断流与 IP 被封，则需要选用真正具备企业级专线与原生住宅 Clean IP 的正规服务商。
+        </p>
+      </div>
+
+      <!-- Diagnostic Table -->
+      <div class="table-container-wrap border-shadow">
+        <div class="table-sub-caption">
+          <span>📊 常见故障症状、底层机理与 60 秒紧急止血方案对照表</span>
+          <span class="table-scroll-hint">👈 手机端支持左右滑动查看完整数据 👉</span>
+        </div>
+        <div class="master-table-scroll">
+          <table class="monograph-table">
+            <thead>
+              <tr>
+                <th class="th-sticky">故障症状表现</th>
+                <th>底层物理机理</th>
+                <th>60秒紧急止血动作</th>
+                <th>根本根治方案</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="th-sticky font-bold">ChatGPT 弹 Error 1020<br/><span class="sub-pill red">访问被拒</span></td>
+                <td>出口 IP 欺诈分爆表，被 Cloudflare 盾级拉黑</td>
+                <td>无痕模式 + 清空 Cookie + 切换至冷门节点</td>
+                <td>选用具备<Link href={`/${currentLang}/airports/guangsu`}>原生 Clean IP 的专线</Link></td>
+              </tr>
+              <tr>
+                <td class="th-sticky font-bold">开启 TUN 后电脑全断网<br/><span class="sub-pill red">微信打不开</span></td>
+                <td>Wintun 虚拟网卡与本地真实网关发生路由死锁</td>
+                <td>Clash 设置中将 Stack 切换为 <code>system</code></td>
+                <td>卸载旧版 TAP 网卡，设置国内分流 DIRECT</td>
+              </tr>
+              <tr>
+                <td class="th-sticky font-bold">关掉代理后无法上网<br/><span class="sub-pill yellow">系统断网</span></td>
+                <td>软件异常退出导致 Windows 注册表代理键值残留</td>
+                <td>重新启动一次客户端并点击正常“退出”</td>
+                <td>在系统代理设置中手动将代理开关设为关</td>
+              </tr>
+              <tr>
+                <td class="th-sticky font-bold">所有节点全部超时超时<br/><span class="sub-pill yellow">延迟测试全红</span></td>
+                <td>系统本地时间与网络标准时间偏差超过 60 秒</td>
+                <td>Windows 设置 ➔ 日期和时间 ➔ 点击“立即同步”</td>
+                <td>开启 NTP 自动对时，确保时间误差为 0</td>
+              </tr>
+              <tr>
+                <td class="th-sticky font-bold">晚高峰看 4K 疯狂转圈<br/><span class="sub-pill blue">测速几百兆依然卡</span></td>
+                <td>公网国际出口拥堵丢包严重，TCP 窗口被腰斩</td>
+                <td>浏览器中禁用 QUIC 协议，退回稳定 TCP</td>
+                <td>选用<Link href={`/${currentLang}/speedtest`}>晚高峰 0% 丢包的 IEPL 专线</Link></td>
+              </tr>
+              <tr>
+                <td class="th-sticky font-bold">Netflix 搜不到非自制剧<br/><span class="sub-pill blue">只能看自制剧</span></td>
+                <td>节点 IP 属于数据中心广播 IP，未获本土版权授权</td>
+                <td>联系机场客服核实是否有专供流媒体解锁节点</td>
+                <td>选用拥有当地原生商宽落地 IP 的老牌专线</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- The 5 Modules -->
+    {
+      faqModules.map((mod, modIdx) => (
+        <section class="monograph-section" id={`module-${mod.moduleId}`}>
+          <div class="section-title-wrap">
+            <span class="section-badge">Module 0{modIdx + 1} · {mod.moduleBadge}</span>
+            <h2 class="section-h2">{mod.moduleTitle}</h2>
+          </div>
+
+          <div class="faq-accordion-list">
+            {mod.items.map((item, itemIdx) => (
+              <details class="faq-item border-shadow" open={itemIdx === 0}>
+                <summary class="faq-question">
+                  <span class="faq-q-badge">M{modIdx + 1}.{itemIdx + 1}</span>
+                  <span class="faq-q-text">{item.q}</span>
+                  <span class="faq-chevron">▾</span>
+                </summary>
+                <div class="faq-answer">
+                  {item.a.split("\n").map((para) => (
+                    <p>{para}</p>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <!-- Chapter 06: Flagship Solution Conversion Bridge -->
+    <section class="monograph-section" id="section-flagship-bridge">
+      <div class="section-title-wrap">
+        <span class="section-badge">Chapter 06 · Ultimate Solution</span>
+        <h2 class="section-h2">终极解法：光速云企业级双 IEPL 专线与 ¥147 永久救生圈</h2>
+      </div>
+
+      <div class="text-block">
+        <p>
+          通读上述 40 余项高频网络故障与排障机理，不难得出一个颠扑不破的网络工程结论：<strong>绝大多数令人痛苦抓狂的网络卡顿、报错与断流，本质上都是因为使用了低成本、超卖严重的公网中继节点，或者 IP 信誉恶劣的公用机房广播网段。</strong>
+        </p>
+        <p>
+          与其每天花费大量宝贵时间排查各种莫名其妙的断流报错、忍受 ChatGPT 的人机验证地狱，最聪明且经济的决策是：**直接接入具备物理内网陆地专线与原生住宅 Clean IP 的工业级稳定服务商。**
+        </p>
+
+        <!-- Featured Flagship Conversion Card -->
+        <div class="flagship-hero-card border-shadow">
+          <div class="card-crown-banner">
+            <span>🏆 2025-2026 年度综合旗舰首推 · 排障终结者</span>
+            <span class="crown-code">专属新人立减折扣码：<strong>AMM</strong></span>
+          </div>
+
+          <div class="flagship-inner">
+            <div class="flagship-left">
+              <h3 class="flagship-brand-title">
+                <Link href={`/${currentLang}/airports/guangsu`}>{guangsu.name}</Link>
+                <span class="brand-sub">2020年老牌稳定运营 · 全自研一键连接生态</span>
+              </h3>
+              <p class="flagship-text">
+                从源头彻底根治网络玄学与晚高峰卡顿。光速云采用高规格<strong>企业级双 IEPL 陆地内网专线双冗余架构</strong>，
+                所有跨境报文在电信/联通企业专用内网光纤穿透，完全不过公网国际海缆出口局，晚高峰实测恒定 <strong>0.0% 丢包率</strong>。
+                不仅单节点峰值吞吐实测高达 <strong>2.5Gbps</strong>，更配备 100% 原生 Clean 纯净落地 IP，
+                完美免翻车解锁 ChatGPT 4o、Claude 3.5 Sonnet、Netflix 4K 超高清与 TikTok 跨境电商直播。
+              </p>
+
+              <div class="flagship-plans-grid">
+                <div class="plan-mini-card">
+                  <span class="plan-role">入门平价首选（一杯奶茶钱）</span>
+                  <div class="plan-price-wrap">
+                    <strong class="plan-p">¥8</strong>
+                    <span class="plan-u">/月起</span>
+                  </div>
+                  <ul class="plan-feats">
+                    <li>✓ 全线 IEPL 纯内网陆地专线</li>
+                    <li>✓ 晚高峰 4K 秒开无缓冲</li>
+                    <li>✓ 全平台自研客户端傻瓜式一键连</li>
+                  </ul>
+                </div>
+
+                <div class="plan-mini-card standout">
+                  <span class="plan-role standout-tag">🔥 终身防失联救生圈（极力推荐）</span>
+                  <div class="plan-price-wrap">
+                    <strong class="plan-p">¥147</strong>
+                    <span class="plan-u">一次性买断</span>
+                  </div>
+                  <ul class="plan-feats">
+                    <li>✓ <strong>247 GB 纯高速 IEPL 专线流量</strong></li>
+                    <li>✓ <strong>永久有效 · 永不过期 · 随用随扣</strong></li>
+                    <li>✓ 放在客户端充当永不失效的主力应急逃生舱</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="flagship-action-row">
+                <a
+                  href={guangsu.affUrl}
+                  target="_blank"
+                  rel="nofollow sponsored noopener"
+                  class="btn-flagship-buy"
+                >
+                  直达光速云官网开通服务 ⚡
+                </a>
+                <Link
+                  href={`/${currentLang}/airports/guangsu`}
+                  class="btn-flagship-audit"
+                >
+                  阅读 16+ 原始测速跑图审计报告 ↗
+                </Link>
+              </div>
+
+              <div class="flagship-foot-note">
+                <span>🛡️ 赞助合作透明披露：本站严选 42 家真机压测品牌，使用专属优惠券码 <strong>AMM</strong> 立享新人折上折。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cross-Topic Internal Links (Topic Cluster) -->
+    <section class="topic-cluster-footer border-shadow" id="section-cluster-links">
+      <h3 class="cluster-title">🔗 protonVPN 核心专题知识库互联矩阵</h3>
+      <p class="cluster-sub">
+        本文为【机场进阶排障与技术 FAQ 圣经】专著。为全面构建您的出海网络知识体系与避坑防线，建议继续研读其他核心专题：
+      </p>
+      <div class="cluster-links-grid">
+        <Link href={`/${currentLang}/free`} class="c-link-card">
+          <span class="c-icon">🔥</span>
+          <div class="c-info">
+            <strong>真·免费资源与安全翻墙全书</strong>
+            <span>蜜罐抓包与窃密攻防实录，开源纯净工具核验清单</span>
+          </div>
+        </Link>
+        <Link href={`/${currentLang}/airports`} class="c-link-card">
+          <span class="c-icon">📊</span>
+          <div class="c-info">
+            <strong>42 家主流梯子品牌全景库</strong>
+            <span>全网 42 家机场价格、倍率、协议与线路横向大比拼</span>
+          </div>
+        </Link>
+        <Link href={`/${currentLang}/speedtest`} class="c-link-card">
+          <span class="c-icon">⚡</span>
+          <div class="c-info">
+            <strong>晚高峰测速天梯实验室</strong>
+            <span>千兆宽带实测，16+ 原始跑图与真实丢包率存证</span>
+          </div>
+        </Link>
+        <Link href={`/${currentLang}/clients`} class="c-link-card">
+          <span class="c-icon">📱</span>
+          <div class="c-info">
+            <strong>全平台客户端配置全书</strong>
+            <span>Clash Verge Rev / 小火箭 / TUN 模式免断网调优</span>
+          </div>
+        </Link>
+        <Link href={`/${currentLang}/solutions`} class="c-link-card">
+          <span class="c-icon">🎯</span>
+          <div class="c-info">
+            <strong>5 大出海业务场景专属方案</strong>
+            <span>TikTok 跨境防封 / AI 住宅专线 / 永久不过期选型</span>
+          </div>
+        </Link>
+      </div>
+    </section>
+  </div>
+</RootLayout>
+
+<style>
+  .faq-monograph-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1rem 0.75rem 4rem 0.75rem;
+    color: var(--foreground, #111827);
+    line-height: 1.8;
+  }
+
+  @media (min-width: 640px) {
+    .faq-monograph-container {
+      padding: 1.5rem 1.25rem 5rem 1.25rem;
+    }
+  }
+
+  /* Header & Breadcrumb */
+  .monograph-header {
+    margin-bottom: 2rem;
+  }
+
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted-foreground, #6b7280);
+    margin-bottom: 1rem;
+  }
+
+  .breadcrumb-nav a {
+    color: var(--primary, #0369a1);
+    text-decoration: none;
+  }
+
+  .breadcrumb-nav a:hover {
+    text-decoration: underline;
+  }
+
+  .hero-badge-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .badge-status-green {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+  }
+
+  :global([data-color-scheme="dark"]) .badge-status-green {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+  }
+
+  .badge-tag {
+    background: rgba(3, 105, 161, 0.1);
+    color: var(--primary, #0369a1);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+  }
+
+  :global([data-color-scheme="dark"]) .badge-tag {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+  }
+
+  .badge-date {
+    font-size: 0.75rem;
+    color: var(--muted-foreground, #6b7280);
+  }
+
+  .monograph-h1 {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.35;
+    margin-bottom: 1rem;
+    color: var(--foreground, #111827);
+  }
+
+  @media (min-width: 768px) {
+    .monograph-h1 {
+      font-size: 2.15rem;
+    }
+  }
+
+  .monograph-lead {
+    font-size: 0.975rem;
+    color: var(--muted-foreground, #4b5563);
+    line-height: 1.85;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-pills-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .stat-pills-row {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .stat-box {
+    display: flex;
+    flex-direction: column;
+    padding: 0.85rem;
+    background: var(--accent, #f9fafb);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-lg, 8px);
+    text-align: center;
+  }
+
+  .stat-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary, #0369a1);
+  }
+
+  :global([data-color-scheme="dark"]) .stat-val {
+    color: var(--primary, #38bdf8);
+  }
+
+  .stat-lbl {
+    font-size: 0.75rem;
+    color: var(--muted-foreground, #6b7280);
+    margin-top: 0.25rem;
+  }
+
+  /* Table of Contents */
+  .monograph-toc-box {
+    margin: 2rem 0 3rem 0;
+    padding: 1.25rem;
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-xl, 12px);
+  }
+
+  :global([data-color-scheme="dark"]) .monograph-toc-box {
+    background: rgba(31, 41, 55, 0.5);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+
+  .toc-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+  }
+
+  .toc-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .toc-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .toc-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-md, 6px);
+    text-decoration: none;
+    color: var(--foreground, #111827);
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+  }
+
+  .toc-link:hover {
+    background: var(--accent, #f3f4f6);
+    color: var(--primary, #0369a1);
+    transform: translateX(3px);
+  }
+
+  :global([data-color-scheme="dark"]) .toc-link:hover {
+    background: rgba(55, 65, 81, 0.8);
+    color: var(--primary, #38bdf8);
+  }
+
+  .toc-link .num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary, #0369a1);
+    font-family: monospace;
+  }
+
+  :global([data-color-scheme="dark"]) .toc-link .num {
+    color: var(--primary, #38bdf8);
+  }
+
+  /* Section Styles */
+  .monograph-section {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 5rem;
+  }
+
+  .section-title-wrap {
+    margin-bottom: 1.25rem;
+  }
+
+  .section-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary, #0369a1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+  }
+
+  :global([data-color-scheme="dark"]) .section-badge {
+    color: var(--primary, #38bdf8);
+  }
+
+  .section-h2 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.35;
+    margin: 0;
+    color: var(--foreground, #111827);
+  }
+
+  @media (min-width: 768px) {
+    .section-h2 {
+      font-size: 1.75rem;
+    }
+  }
+
+  .text-block p {
+    margin-bottom: 1.25rem;
+    font-size: 0.95rem;
+    color: var(--foreground, #374151);
+  }
+
+  :global([data-color-scheme="dark"]) .text-block p {
+    color: #d1d5db;
+  }
+
+  /* Direct Answer Banner */
+  .direct-answer-banner {
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(3, 105, 161, 0.08) 0%, rgba(243, 244, 246, 0.8) 100%);
+    border: 1px solid rgba(3, 105, 161, 0.2);
+    border-radius: var(--radius-xl, 12px);
+    margin-bottom: 1.5rem;
+  }
+
+  :global([data-color-scheme="dark"]) .direct-answer-banner {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(31, 41, 55, 0.8) 100%);
+    border-color: rgba(56, 189, 248, 0.25);
+  }
+
+  .answer-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary, #0369a1);
+    background: rgba(3, 105, 161, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  :global([data-color-scheme="dark"]) .answer-badge {
+    color: var(--primary, #38bdf8);
+    background: rgba(56, 189, 248, 0.2);
+  }
+
+  .answer-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0.5rem 0 0.75rem 0;
+  }
+
+  .answer-desc {
+    font-size: 0.925rem;
+    line-height: 1.8;
+    margin: 0;
+    color: var(--foreground, #1f2937);
+  }
+
+  :global([data-color-scheme="dark"]) .answer-desc {
+    color: #e5e7eb;
+  }
+
+  /* Comparison Table */
+  .table-container-wrap {
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-xl, 12px);
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  :global([data-color-scheme="dark"]) .table-container-wrap {
+    background: rgba(31, 41, 55, 0.6);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+
+  .table-sub-caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--muted-foreground, #4b5563);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+  }
+
+  .table-scroll-hint {
+    font-size: 0.75rem;
+    color: #e11d48;
+  }
+
+  .master-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .monograph-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+    min-width: 800px;
+  }
+
+  .monograph-table th,
+  .monograph-table td {
+    padding: 0.75rem 0.65rem;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    vertical-align: middle;
+  }
+
+  .monograph-table th {
+    background: var(--accent, #f9fafb);
+    font-weight: 700;
+    color: var(--foreground, #111827);
+    white-space: nowrap;
+  }
+
+  :global([data-color-scheme="dark"]) .monograph-table th {
+    background: rgba(55, 65, 81, 0.7);
+  }
+
+  .th-sticky {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 1;
+    min-width: 150px;
+  }
+
+  .sub-pill {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    margin-top: 0.2rem;
+  }
+  .sub-pill.red { background: #fee2e2; color: #b91c1c; }
+  .sub-pill.yellow { background: #fef3c7; color: #b45309; }
+  .sub-pill.blue { background: #dbeafe; color: #1d4ed8; }
+
+  /* FAQ Accordion List */
+  .faq-accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+
+  .faq-item {
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-lg, 8px);
+    overflow: hidden;
+  }
+
+  :global([data-color-scheme="dark"]) .faq-item {
+    background: rgba(31, 41, 55, 0.5);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+
+  .faq-question {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.925rem;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  .faq-question:hover {
+    color: var(--primary, #0369a1);
+  }
+
+  :global([data-color-scheme="dark"]) .faq-question:hover {
+    color: var(--primary, #38bdf8);
+  }
+
+  .faq-q-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: var(--primary, #0369a1);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: nowrap;
+  }
+
+  :global([data-color-scheme="dark"]) .faq-q-badge {
+    background: var(--primary, #38bdf8);
+    color: #0f172a;
+  }
+
+  .faq-q-text {
+    flex: 1;
+  }
+
+  .faq-chevron {
+    font-size: 1.1rem;
+    color: var(--muted-foreground, #9ca3af);
+    transition: transform 0.2s;
+  }
+
+  details[open] .faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    font-size: 0.885rem;
+    color: var(--foreground, #374151);
+    line-height: 1.75;
+    border-top: 1px solid var(--border, #f3f4f6);
+    padding-top: 0.75rem;
+  }
+
+  :global([data-color-scheme="dark"]) .faq-answer {
+    color: #d1d5db;
+    border-top-color: rgba(75, 85, 99, 0.3);
+  }
+
+  .faq-answer p {
+    margin-bottom: 0.65rem;
+  }
+
+  .faq-answer p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Flagship Hero Card */
+  .flagship-hero-card {
+    margin: 2rem 0;
+    background: linear-gradient(135deg, rgba(3, 105, 161, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%);
+    border: 2px solid var(--primary, #0369a1);
+    border-radius: var(--radius-xl, 12px);
+    overflow: hidden;
+  }
+
+  :global([data-color-scheme="dark"]) .flagship-hero-card {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+    border-color: var(--primary, #38bdf8);
+  }
+
+  .card-crown-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 1.25rem;
+    background: linear-gradient(90deg, #0369a1 0%, #7c3aed 100%);
+    color: #ffffff;
+    font-size: 0.825rem;
+    font-weight: 700;
+  }
+
+  .crown-code {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .flagship-inner {
+    padding: 1.5rem;
+  }
+
+  .flagship-brand-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .brand-sub {
+    font-size: 0.825rem;
+    color: var(--muted-foreground, #6b7280);
+    font-weight: 400;
+    margin-left: 0.5rem;
+  }
+
+  .flagship-text {
+    font-size: 0.925rem;
+    line-height: 1.75;
+    margin-bottom: 1.25rem;
+    color: var(--foreground, #374151);
+  }
+
+  .flagship-plans-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .flagship-plans-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .plan-mini-card {
+    padding: 1rem;
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-lg, 8px);
+  }
+
+  :global([data-color-scheme="dark"]) .plan-mini-card {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: rgba(75, 85, 99, 0.5);
+  }
+
+  .plan-mini-card.standout {
+    border-color: #7c3aed;
+    background: rgba(147, 51, 234, 0.04);
+  }
+
+  .plan-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted-foreground, #6b7280);
+  }
+
+  .standout-tag {
+    color: #7c3aed !important;
+  }
+
+  .plan-price-wrap {
+    margin: 0.4rem 0 0.6rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+
+  .plan-p {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--primary, #0369a1);
+  }
+
+  :global([data-color-scheme="dark"]) .plan-p {
+    color: var(--primary, #38bdf8);
+  }
+
+  .plan-u {
+    font-size: 0.8rem;
+    color: var(--muted-foreground, #6b7280);
+  }
+
+  .plan-feats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--foreground, #4b5563);
+    line-height: 1.6;
+  }
+
+  :global([data-color-scheme="dark"]) .plan-feats {
+    color: #d1d5db;
+  }
+
+  .flagship-action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .flagship-action-row {
+      flex-direction: row;
+    }
+  }
+
+  .btn-flagship-buy {
+    flex: 2;
+    text-align: center;
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-lg, 8px);
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25);
+    transition: transform 0.15s ease;
+  }
+
+  .btn-flagship-buy:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-flagship-audit {
+    flex: 1;
+    text-align: center;
+    background: var(--accent, #f3f4f6);
+    color: var(--foreground, #111827);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg, 8px);
+    text-decoration: none;
+  }
+
+  .flagship-foot-note {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground, #9ca3af);
+  }
+
+  /* Topic Cluster Footer */
+  .topic-cluster-footer {
+    margin-top: 4rem;
+    padding: 1.5rem;
+    background: var(--accent, #f9fafb);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-xl, 12px);
+  }
+
+  :global([data-color-scheme="dark"]) .topic-cluster-footer {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: rgba(75, 85, 99, 0.5);
+  }
+
+  .cluster-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+  }
+
+  .cluster-sub {
+    font-size: 0.825rem;
+    color: var(--muted-foreground, #6b7280);
+    margin-bottom: 1.25rem;
+  }
+
+  .cluster-links-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .cluster-links-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .c-link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-lg, 8px);
+    text-decoration: none;
+    color: var(--foreground, #111827);
+    transition: all 0.2s ease;
+  }
+
+  :global([data-color-scheme="dark"]) .c-link-card {
+    background: rgba(17, 24, 39, 0.7);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+
+  .c-link-card:hover {
+    border-color: var(--primary, #0369a1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  :global([data-color-scheme="dark"]) .c-link-card:hover {
+    border-color: var(--primary, #38bdf8);
+  }
+
+  .c-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .c-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .c-info strong {
+    font-size: 0.875rem;
+  }
+
+  .c-info span {
+    font-size: 0.75rem;
+    color: var(--muted-foreground, #6b7280);
+    margin-top: 0.15rem;
+  }
+</style>

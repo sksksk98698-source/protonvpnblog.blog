@@ -28,13 +28,15 @@ type Props = {
 };
 
 const currentLocale = useLocale() as Lang;
+const normalizedSiteUrl = SiteConfig.siteUrl.replace(/\/+$/, "");
+const defaultCanonicalURL = new URL(Astro.url.pathname, normalizedSiteUrl).href;
 
 const {
   lang = currentLocale,
   title: headTitle,
   description: headDescription,
   image,
-  canonicalURL = Astro.url.href.replace(`/${lang}`, `/${DEFAULT_LANG}`),
+  canonicalURL: customCanonicalURL,
   alternates,
   noindex = false,
   languageSwitchLinks,
@@ -45,11 +47,13 @@ const {
   username,
 } = Astro.props;
 
+const canonicalURL = customCanonicalURL ?? defaultCanonicalURL;
+
 const rawImage = image ?? SiteConfig.ogImage;
 const imageSrc =
   typeof rawImage === "object" && rawImage !== null && "src" in rawImage ? rawImage.src : rawImage;
 
-const ogImageUrl = imageSrc ? new URL(imageSrc, Astro.site ?? Astro.url).href : undefined;
+const ogImageUrl = imageSrc ? new URL(imageSrc, normalizedSiteUrl).href : undefined;
 
 const t = useTranslations("common");
 
@@ -66,13 +70,20 @@ let xDefaultURL: string | null = null;
 if (!noindex) {
   if (typeof alternates === "undefined") {
     // Default: assume matching URLs exist across all languages
+    const langPrefixRegex = new RegExp(`^${SiteConfig.basePath}/[a-zA-Z-]+`);
     AVAILABLE_LANG.forEach((language) => {
       alternateList.push({
         language,
-        href: Astro.url.href.replace(`/${lang}`, `/${language}`),
+        href: new URL(
+          Astro.url.pathname.replace(langPrefixRegex, `${SiteConfig.basePath}/${language}`),
+          normalizedSiteUrl,
+        ).href,
       });
     });
-    xDefaultURL = canonicalURL;
+    xDefaultURL = new URL(
+      Astro.url.pathname.replace(langPrefixRegex, `${SiteConfig.basePath}/${DEFAULT_LANG}`),
+      normalizedSiteUrl,
+    ).href;
   } else if (alternates) {
     // Custom alternates map provided by page (e.g. blog posts with specific slugs per lang)
     alternates.forEach((href, language) => {
@@ -82,11 +93,82 @@ if (!noindex) {
         alternateList.push({ language, href });
       }
     });
-    if (!xDefaultURL && canonicalURL) {
-      xDefaultURL = canonicalURL;
+    if (!xDefaultURL) {
+      xDefaultURL = alternates.get(DEFAULT_LANG) ?? canonicalURL;
     }
   }
 }
+
+// JSON-LD structured data for search engine rich results
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteTitle,
+  url: normalizedSiteUrl,
+  description: siteDescription,
+  inLanguage: lang,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${normalizedSiteUrl}${SiteConfig.basePath}/${lang}/search?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteTitle,
+  alternateName: "protonVPN Network Observatory Lab",
+  url: normalizedSiteUrl,
+  logo: `${normalizedSiteUrl}${SiteConfig.basePath}/favicon.svg`,
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "contact@protonvpnblog.blog",
+    contactType: "customer service",
+  },
+};
+
+const authorList = Array.isArray(authors)
+  ? authors
+  : typeof authors === "string"
+    ? [authors]
+    : [siteTitle];
+
+const articleSchema =
+  type === "article"
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: title,
+        description: description,
+        url: canonicalURL,
+        inLanguage: lang,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalURL,
+        },
+        ...(ogImageUrl ? { image: ogImageUrl } : {}),
+        ...(publishedTime ? { datePublished: publishedTime } : {}),
+        ...(modifiedTime
+          ? { dateModified: modifiedTime }
+          : publishedTime
+            ? { dateModified: publishedTime }
+            : {}),
+        author: authorList.map((a) => ({
+          "@type": "Person",
+          name: a,
+        })),
+        publisher: {
+          "@type": "Organization",
+          name: siteTitle,
+          url: normalizedSiteUrl,
+          logo: {
+            "@type": "ImageObject",
+            url: `${normalizedSiteUrl}${SiteConfig.basePath}/favicon.svg`,
+          },
+        },
+      }
+    : null;
 
 // Language switch links for UI header dropdown (falls back to current path with language prefix swapped)
 const switchLinks: Map<Lang, string> =
@@ -110,11 +192,36 @@ const switchLinks: Map<Lang, string> =
     <ClientRouter />
     <LoadingIndicator color="var(--primary)" height="0.25rem" />
 
+    {/* Search Engine Webmaster Verification */}
     {
       (SiteConfig.googleSiteVerification || import.meta.env.GOOGLE_SITE_VERIFICATION) && (
         <meta
           name="google-site-verification"
           content={SiteConfig.googleSiteVerification || import.meta.env.GOOGLE_SITE_VERIFICATION}
+        />
+      )
+    }
+    {
+      (SiteConfig.bingSiteVerification || import.meta.env.BING_SITE_VERIFICATION) && (
+        <meta
+          name="msvalidate.01"
+          content={SiteConfig.bingSiteVerification || import.meta.env.BING_SITE_VERIFICATION}
+        />
+      )
+    }
+    {
+      (SiteConfig.shenmaSiteVerification || import.meta.env.SHENMA_SITE_VERIFICATION) && (
+        <meta
+          name="shenma-site-verification"
+          content={SiteConfig.shenmaSiteVerification || import.meta.env.SHENMA_SITE_VERIFICATION}
+        />
+      )
+    }
+    {
+      (SiteConfig.baiduSiteVerification || import.meta.env.BAIDU_SITE_VERIFICATION) && (
+        <meta
+          name="baidu-site-verification"
+          content={SiteConfig.baiduSiteVerification || import.meta.env.BAIDU_SITE_VERIFICATION}
         />
       )
     }
@@ -143,20 +250,38 @@ const switchLinks: Map<Lang, string> =
       )
     }
 
-    {noindex && <meta name="robots" content="noindex,follow" />}
+    {
+      noindex ? (
+        <meta name="robots" content="noindex, follow" />
+      ) : (
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+      )
+    }
 
     {/* Primary Meta Tags */}
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
 
+    {/* Schema.org Structured Data (JSON-LD) */}
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(websiteSchema)} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(organizationSchema)} />
+    {
+      articleSchema && (
+        <script type="application/ld+json" is:inline set:html={JSON.stringify(articleSchema)} />
+      )
+    }
+
     {/* Open Graph / Facebook */}
     <meta property="og:type" content={type} />
-    <meta property="og:url" content={Astro.url} />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:language" content={lang} />
-    <meta property="og:site_name" content={t("site_title")} />
+    <meta property="og:locale" content={lang} />
+    <meta property="og:site_name" content={siteTitle} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     {
       publishedTime && type === "article" && (
@@ -182,7 +307,7 @@ const switchLinks: Map<Lang, string> =
 
     {/* Twitter */}
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
     {ogImageUrl && <meta property="twitter:image" content={ogImageUrl} />}
@@ -195,7 +320,7 @@ const switchLinks: Map<Lang, string> =
     />
 
     {/* Canonical URL */}
-    {!noindex && canonicalURL && <link rel="canonical" href={canonicalURL} />}
+    {canonicalURL && <link rel="canonical" href={canonicalURL} />}
 
     {/* Alternate URL */}
     {
@@ -242,6 +367,7 @@ const switchLinks: Map<Lang, string> =
     <div class="fadeIn" id="container" transition:animate="none">
       <slot name="header" />
       <slot name="content" />
+      <slot />
       <slot name="footer" />
     </div>
     <Footer />

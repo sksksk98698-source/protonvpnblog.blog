@@ -1,45 +1,402 @@
 ---
-import { AVAILABLE_LANG, useTranslations } from "~/i18n";
-import AuthorLayout from "@/layouts/AuthorLayout.astro";
+import { AVAILABLE_LANG } from "~/i18n";
 import RootLayout from "@/layouts/RootLayout.astro";
-import { getCollection, render } from "astro:content";
-import CustomLink from "@/components/ui/Link.astro";
-import Steps from "@/components/mdx/Steps.astro";
-import FileTree from "@/components/mdx/FileTree.astro";
-import Tabs from "@/components/mdx/Tabs.astro";
-import TabItem from "@/components/mdx/TabItem.astro";
-import Icon from "@/components/ui/Icon.astro";
+import Link from "@/components/ui/Link.astro";
+import PillarCapsuleNav from "@/components/ui/PillarCapsuleNav.astro";
 
 export async function getStaticPaths() {
   return AVAILABLE_LANG.map((lang) => ({
-    params: { lang: lang },
+    params: { lang },
   }));
 }
 
 const { lang } = Astro.params;
+const currentLang = lang || "zh-Hans";
 
-const author = (
-  await getCollection(
-    "author",
-    (author) => author.id.endsWith("/default") && author.data.language === lang,
-  )
-)[0];
-
-const { name, avatar } = author.data;
-
-const { Content } = await render(author);
-
-const t = useTranslations("common");
+const pageTitle = "评测准则与关于我们 - protonVPN 网络性能评测实验室与第三方免责声明";
+const pageDescription = "了解 protonVPN 评测实验室物理千兆光纤测试环境、晚高峰真机压测标准、四维量化评分体系，以及与瑞士 Proton AG 的第三方独立免责声明。";
 ---
 
-<RootLayout
-  title={`${t("about")} ${name}`}
-  description={`${t("about")} ${name}`}
-  image={avatar?.src}
-  type="profile"
-  username={name}
->
-  <AuthorLayout {...author.data} slot="content">
-    <Content components={{ a: CustomLink, Steps: Steps, FileTree, Tabs, TabItem, Icon }} />
-  </AuthorLayout>
+<RootLayout title={pageTitle} description={pageDescription}>
+  <article slot="content" class="about-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <Link href={`/${currentLang}`}>首页</Link>
+      <span class="sep">/</span>
+      <span class="current">评测准则与关于我们</span>
+    </nav>
+
+    <!-- Header Hero -->
+    <header class="about-hero border-shadow">
+      <div class="hero-badge">
+        <span>🛡️ 独立中立网络性能观测组织</span>
+      </div>
+      <h1 class="hero-title">评测实验室准则、测试基准与第三方免责声明</h1>
+      <p class="hero-desc">
+        坚持“真机晚高峰压测、原始跑图存证、零充值黑箱、全网数据透明”原则，为跨境科研、外贸出海及合规远程办公用户提供严谨可靠的网络传输与排障参考。
+      </p>
+      <PillarCapsuleNav lang={currentLang} activeKey="home" />
+    </header>
+
+    <!-- Legal Disclaimer Block (Critical Entity Disambiguation) -->
+    <section class="disclaimer-alert-card border-shadow">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <h2 class="alert-title">重要法律声明与实体澄清 (Trademark & Legal Disclaimer)</h2>
+        <div class="alert-text">
+          <p>
+            <strong>1. 独立第三方机构声明：</strong>本网站（域名：<code>protonvpnblog.blog</code>）及“protonVPN 评测实验室”为由多位计算机网络工程研究者发起的<strong>非官方、民间中立技术博客与网络性能观测项目</strong>。
+          </p>
+          <p>
+            <strong>2. 与瑞士 Proton AG 无任何关联：</strong>
+            <strong>本网站及本实验室与瑞士日内瓦的 Proton AG（Proton VPN、Proton Mail、Proton Drive 官方所有者）无任何商业从属、股权关联、官方代理、品牌授权或资本关系。</strong>
+            本站所涉及的所有第三方“机场”、“IEPL专线”、“代理客户端”评测，均由本团队独立采购测试，与瑞士官方 Proton VPN 服务无任何连带责任。
+          </p>
+          <p>
+            <strong>3. 合规与免责约定：</strong>
+            本站发布的所有测速跑图、技术原理解析与客户端教程仅供学术探索、软件工程测试及跨境合法办公通信优化参考。使用者应严格遵守当地法律法规，不得利用相关技术从事破坏计算机网络安全及任何违法行为。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lab Testing Methodology -->
+    <section class="section-card border-shadow">
+      <h2 class="section-heading">🌐 1. 物理测试环境与真机压测基础设施</h2>
+      <p>
+        为了杜绝行业内普遍存在的“挂机模拟空载”、“私下美化测速图”等虚假评测乱象，protonVPN 评测实验室自建了标准化的物理千兆光纤测试集群：
+      </p>
+      <div class="infra-grid">
+        <div class="infra-item">
+          <span class="infra-icon">🔌</span>
+          <h3>物理宽带接入</h3>
+          <p>主干接入中国电信 1000M FTTH 家庭光纤（广州/上海/北京节点轮测），备用接入中国联通 500M 光纤，全线公网 IPv4/IPv6 双栈。</p>
+        </div>
+        <div class="infra-item">
+          <span class="infra-icon">🖥️</span>
+          <h3>物理测试机硬件</h3>
+          <p>搭载 Intel 12代 Alder Lake 原生硬件核心，配置 Intel i226-V 2.5G 双网卡直通，运行精简版 Debian Linux 内核，彻底消除系统级转发瓶颈。</p>
+        </div>
+        <div class="infra-item">
+          <span class="infra-icon">⏰</span>
+          <h3>测试时段严苛锁定</h3>
+          <p>所有性能图谱均锁定在全国骨干网极限拥堵的<strong>晚高峰时段（20:00 - 23:00）</strong>进行，拒绝任何日间低峰期的虚假“满速”数据。</p>
+        </div>
+        <div class="infra-item">
+          <span class="infra-icon">📊</span>
+          <h3>原始测速跑图存证</h3>
+          <p>每个机场品牌均保留全节点测速原始大图、丢包率统计柱状图及流媒体解锁验证日志，点击均可查看原始无损原件。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scoring System -->
+    <section class="section-card border-shadow">
+      <h2 class="section-heading">⚖️ 2. 四维量化评分模型 (Scoring Methodology)</h2>
+      <p>
+        本实验室对 42 家机场梯子的综合排名严格基于四项核心量化权重的加权计算得出，拒绝一切主观臆断：
+      </p>
+      <div class="metrics-table-container">
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>评估维度</th>
+              <th>权重占比</th>
+              <th>量化测试标准与考察重点</th>
+              <th>扣分与降权红线</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>晚高峰实际吞吐速率</strong></td>
+              <td><code>30%</code></td>
+              <td>单线程测速突破 300Mbps 为优秀，多线程突破 800Mbps，YouTube 4K 秒开无缓冲。</td>
+              <td>晚高峰带宽腰斩低于 50Mbps，或大文件下载频繁断流。</td>
+            </tr>
+            <tr>
+              <td><strong>丢包率与网络抖动 (Jitter)</strong></td>
+              <td><code>25%</code></td>
+              <td>晚高峰 0% 丢包率为专线及格线；延迟标准差（抖动）低于 5ms。</td>
+              <td>丢包率超过 3%，SSH 终端输入明显卡顿，游戏对战跳 Ping。</td>
+            </tr>
+            <tr>
+              <td><strong>流媒体与 AI 原生解锁</strong></td>
+              <td><code>25%</code></td>
+              <td>香港、日本、新加坡、美国核心节点对 ChatGPT 4o、Claude 3.5、Netflix 原生 IP 解锁率达 100%。</td>
+              <td>大模型提示 Access Denied 或持续弹出 Cloudflare 5 秒盾死循环。</td>
+            </tr>
+            <tr>
+              <td><strong>线路冗余度与客服 SLA</strong></td>
+              <td><code>20%</code></td>
+              <td>多地 BGP 入口容灾中转，自研一键客户端生态，7×24 小时真人技术工单支持。</td>
+              <td>入口单一、单点故障瘫痪无备用线路、工单超时 24 小时未回复。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Editorial Neutrality -->
+    <section class="section-card border-shadow">
+      <h2 class="section-heading">🤝 3. 商业透明度与编辑中立承诺</h2>
+      <div class="neutrality-grid">
+        <div class="neutrality-card">
+          <h3>🚫 拒绝付费充值改排名</h3>
+          <p>
+            我们绝不出售前三名推荐位。排名由晚高峰实测数据雷达、丢包率与运营稳定性算法自动打分排序。任何服务一旦发生重大断网或虚假宣传，立即启动降级甚至列入《跑路与避坑预警专题》。
+          </p>
+        </div>
+        <div class="neutrality-card">
+          <h3>🔗 推广链接 (Affiliate) 公开透明</h3>
+          <p>
+            本站部分机场附带公开的官方推广返利链接。该微薄收益仅用于覆盖实验室千兆 FTTH 宽带费、软路由硬件升级与自动化探针服务器支出，<strong>绝对不会影响评测评分与优缺点客观披露</strong>。
+          </p>
+        </div>
+        <div class="neutrality-card">
+          <h3>🛡️ 100% 外链安全隔离</h3>
+          <p>
+            全站所有商业出站链接均严格遵循 W3C 与 Google 搜索爬虫安全标准，全局包裹 <code>rel="nofollow sponsored noopener"</code>，杜绝任何违规外链操作，保障用户访问纯净性。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact & Feedback -->
+    <section class="section-card border-shadow">
+      <h2 class="section-heading">📫 4. 勘误、复测与厂商联系通道</h2>
+      <p>
+        跨境网络路由受骨干网调整与海底光缆割接影响具备动态变化特征。若您发现某家品牌线路发生重大升级，或测速数据与本站报告存在明显差异，欢迎提交测试报告申请复核：
+      </p>
+      <div class="contact-box">
+        <p><strong>技术勘误与复测申诉邮箱：</strong><code>contact@protonvpnblog.blog</code></p>
+        <p class="contact-hint">
+          *来信请注明：品牌名称、测试运营商（如广州电信）、测试客户端（如 Clash Verge Rev）、发生异常的节点名称与截图附件。实验室工程师将在 3 个工作日内安排探针复测并更新评测报告。
+        </p>
+      </div>
+    </section>
+  </article>
 </RootLayout>
+
+<style>
+  .about-container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-4);
+  }
+
+  .breadcrumb-nav a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+  }
+
+  .breadcrumb-nav a:hover {
+    color: var(--primary);
+  }
+
+  .breadcrumb-nav .current {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .about-hero {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-4);
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .hero-badge span {
+    display: inline-block;
+    padding: 2px 10px;
+    background: rgba(14, 165, 233, 0.12);
+    color: var(--primary);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .hero-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.3;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Disclaimer Alert Card */
+  .disclaimer-alert-card {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .alert-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .alert-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #dc2626;
+    margin: 0 0 var(--space-2) 0;
+  }
+
+  :global([data-color-scheme="dark"]) .alert-title {
+    color: #f87171;
+  }
+
+  .alert-text p {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    margin: 0 0 var(--space-2) 0;
+  }
+
+  .alert-text p:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+
+  .section-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0 0 var(--space-3) 0;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .infra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .infra-item {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .infra-icon {
+    font-size: 1.5rem;
+  }
+
+  .infra-item h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: var(--space-1) 0;
+    color: var(--foreground);
+  }
+
+  .infra-item p {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .metrics-table-container {
+    overflow-x: auto;
+    margin-top: var(--space-4);
+  }
+
+  .metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .metrics-table th,
+  .metrics-table td {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .metrics-table th {
+    background: var(--accent);
+    color: var(--foreground);
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+
+  .neutrality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .neutrality-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .neutrality-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 var(--space-2) 0;
+    color: var(--foreground);
+  }
+
+  .neutrality-card p {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .contact-box {
+    background: var(--accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-top: var(--space-3);
+  }
+
+  .contact-box p {
+    margin: 0 0 var(--space-1) 0;
+    font-size: 0.85rem;
+  }
+
+  .contact-hint {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+</style>

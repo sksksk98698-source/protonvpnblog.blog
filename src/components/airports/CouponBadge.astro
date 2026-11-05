@@ -1,0 +1,135 @@
+---
+export interface Props {
+  code?: string;
+  discount?: string;
+  class?: string;
+}
+
+const { code, discount, class: className = "" } = Astro.props;
+if (!code) return null;
+---
+
+<div class={`coupon-container ${className}`} data-coupon={code}>
+  <div class="coupon-content">
+    <span class="coupon-icon" aria-hidden="true">🏷️</span>
+    {discount && <span class="coupon-discount">{discount}</span>}
+    <code class="coupon-code">{code}</code>
+  </div>
+  <button type="button" class="coupon-copy-btn" title="点击复制折扣码" aria-label={`复制优惠码 ${code}`}>
+    <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <span class="btn-text">一键复制</span>
+  </button>
+</div>
+
+<script>
+  function setupCouponButtons() {
+    document.querySelectorAll(".coupon-container").forEach((container) => {
+      const btn = container.querySelector(".coupon-copy-btn");
+      const code = container.getAttribute("data-coupon");
+      if (!btn || !code) return;
+
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(code);
+          const btnText = btn.querySelector(".btn-text");
+          if (btnText) {
+            const original = btnText.textContent;
+            btnText.textContent = "已复制 ✓";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              btnText.textContent = original;
+              btn.classList.remove("copied");
+            }, 2000);
+          }
+        } catch (err) {
+          console.error("Failed to copy coupon:", err);
+        }
+      });
+    });
+  }
+  setupCouponButtons();
+  document.addEventListener("astro:page-load", setupCouponButtons);
+</script>
+
+<style>
+  .coupon-container {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: rgba(14, 165, 233, 0.08);
+    border: 1px dashed rgba(14, 165, 233, 0.4);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--foreground);
+    transition: border-color var(--duration);
+  }
+
+  .coupon-container:hover {
+    border-color: var(--primary);
+  }
+
+  .coupon-content {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .coupon-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .coupon-discount {
+    font-size: 0.75rem;
+    padding: 1px 6px;
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--primary);
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .coupon-code {
+    font-family: var(--font-family-monospaced);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    padding: 1px 5px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 3px;
+    color: #e11d48;
+  }
+
+  :global([data-color-scheme="dark"]) .coupon-code {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fb7185;
+  }
+
+  .coupon-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity var(--duration), background-color var(--duration);
+  }
+
+  .coupon-copy-btn:hover {
+    opacity: 0.9;
+  }
+
+  .coupon-copy-btn.copied {
+    background: #10b981;
+  }
+</style>

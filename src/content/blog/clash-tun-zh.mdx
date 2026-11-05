@@ -1,0 +1,66 @@
+---
+title: "Clash Verge Rev 核心配置与系统级 TUN 模式防断网实战全书"
+summary: "深入拆解 Clash TUN 虚拟网卡与本地真实物理网卡的路由冲突、Fake-IP 模式解析机制，以及国内外规则分流防断网排障 SOP。"
+translationKey: "clash-tun"
+date: "2025-01-12T10:00:00Z"
+lastmod: "2026-11-05T14:30:00Z"
+tags: ["Clash", "客户端", "TUN模式", "分流规则", "排障指南"]
+categories: ["客户端教程"]
+language: "zh-Hans"
+authors: ["default"]
+image: "@/assets/og.jpg"
+isCanonical: true
+---
+
+## 为什么说 TUN 模式是科学上网的终极形态？
+
+在传统的代理模式中，客户端（如早期的 Clash for Windows 或普通系统代理）仅在本地回环地址开放一个 HTTP / SOCKS5 监听端口（通常是 `127.0.0.1:7890`）。
+
+这种传统模式存在极其致命的局限性：
+1. **无法代理非标准程序**：绝大多数命令行工具（Git、PowerShell、curl）、开发环境（Docker、WSL2、Node.js / Python 脚本）、外服游戏（Steam、Epic）以及桌面端大型软件根本不会读取系统的通用代理设置，导致终端频繁报错 `Connection timed out`。
+2. **DNS 劫持防不胜防**：即使设置了代理，操作系统的 DNS 查询请求依然走本地宽带网卡，真实访问域名直接暴露在本地运营商审计日志中。
+
+通过开启 **TUN 模式（虚拟网卡模式）**，客户端会在操作系统内核中创建一张虚拟以太网卡，将操作系统的**全量网络流量（包括 TCP、UDP、ICMP Ping 包）在物理网卡层全面捕获并接管**，从而实现 100% 真正的系统级全局透明代理。
+
+---
+
+## Clash Verge Rev 开启 TUN 模式的黄金配置规范
+
+### 1. 安装核心系统服务（Service Mode）
+
+在 Windows 或 macOS 下运行 TUN 模式，必须赋予客户端提升网络网卡配置的系统特权：
+- 进入 Clash Verge Rev 的 **「设置（Settings）」➔「服务模式（Service Mode）」**。
+- 点击安装服务，服务模式状态点显示为绿色即代表驱动就绪。
+- 进入「TUN 模式」开关，开启 TUN 模式。
+
+### 2. Fake-IP 模式与 DNS 纯净调优
+
+在配置文件中，确保 DNS 解析配置遵循以下防泄漏规范：
+
+```yaml title="clash-config-tuning.yaml"
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/16
+  nameserver:
+    - https://223.5.0.5/dns-query
+    - https://1.12.12.12/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+```
+
+> [!TIP] 为什么要用 Fake-IP？
+> 在 `fake-ip` 模式下，当本地浏览器请求 `google.com` 时，Clash 客户端在 1 毫秒内就直接从本地内存分配一个虚拟 IP（如 `198.18.0.2`）返回给系统，完全避免了等待海外 DNS 往返解析的漫长延迟。直到真实建立 TCP 连接时，Clash 才把域名发送给远程的 IEPL 高速专线节点，由远端在境外进行无污染纯净解析。
+
+---
+
+## 常见断网排障 SOP
+
+- **故障一：开启 TUN 模式后电脑全部断网，微信打不开？**
+  - **排查**：打开设备管理器，检查是否有老旧的 TAP-Windows 网卡或虚拟机网卡（如 VMware / VirtualBox 网卡）与 Clash 的 Wintun 驱动发生默认路由（Default Gateway 0.0.0.0/0）竞争冲突。
+  - **解决**：在 Clash Verge 设置中，将网络栈（Stack）由 `gvisor` 切换为 `system` 或 `mixed`，并临时禁用未使用的虚拟机虚拟网卡。
+- **故障二：断开代理后电脑无法上网？**
+  - **解决**：这是因为软件异常退出未清理系统 DNS。在控制面板打开网络连接属性，将 DNS 服务器地址重置为“自动获得 DNS 服务器地址”即可秒级恢复。

@@ -1,0 +1,597 @@
+---
+import { AVAILABLE_LANG, useLocale, useTranslations } from "~/i18n";
+import RootLayout from "@/layouts/RootLayout.astro";
+import { AIRPORT_BRANDS } from "@/data/airports";
+import Link from "@/components/ui/Link.astro";
+import CouponBadge from "@/components/airports/CouponBadge.astro";
+import PillarCapsuleNav from "@/components/ui/PillarCapsuleNav.astro";
+
+export async function getStaticPaths() {
+  return AVAILABLE_LANG.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || "zh-Hans";
+
+const pageTitle =
+  currentLang === "zh-Hans"
+    ? "5大出海业务场景专属梯子解决方案 (AI/TikTok/4K流媒体/不限时/平价) - protonVPN"
+    : currentLang === "ja-JP"
+    ? "5大ユースケース別プロキシソリューション (生成AI/TikTok越境/4K動画/買い切り無期限) - protonVPN"
+    : "5 Tailored Proxy Solutions for AI, TikTok, 4K Streaming & Budget Needs - protonVPN";
+
+const pageDescription =
+  currentLang === "zh-Hans"
+    ? "针对不同使用场景精准选型：ChatGPT 4o & Claude 3.5 抗风控专线、TikTok 跨境电商直播防封原生IP、Netflix 4K 超高清无缓冲、永久不限时备用套餐与百元年付平价方案。"
+    : currentLang === "ja-JP"
+    ? "ChatGPTやClaude向け住宅IP、TikTokライブ配信、Netflix 4K動画、買い切り無期限の非常用プランなど、目的に応じた最適なプロキシ空港を選定。"
+    : "Scenario-based proxy selection guide: Anti-risk lines for AI, residential IPs for TikTok streaming, 4K video accelerators, and one-time no-expiry backup plans.";
+
+// Helpers to get brands
+const getBrandBySlug = (slug: string) => AIRPORT_BRANDS.find((b) => b.slug === slug);
+const guangsu = getBrandBySlug("guangsu") || AIRPORT_BRANDS[0];
+const xifeng = getBrandBySlug("xifeng");
+const tengyun = getBrandBySlug("tengyun");
+const youtu = getBrandBySlug("youtu");
+const wuyou = getBrandBySlug("wuyou");
+const jifeng = getBrandBySlug("jifeng");
+const jikeyun = getBrandBySlug("jikeyun");
+const laogou = getBrandBySlug("laogou");
+const feiyang = getBrandBySlug("feiyang");
+const longmao = getBrandBySlug("longmao");
+
+const scenarios = [
+  {
+    id: "ai",
+    title: "场景一：ChatGPT 4o / Claude 3.5 大模型深度开发与创作",
+    icon: "🤖",
+    target: "AI 从业者、程序员、Cursor / Copilot 开发者、自媒体文案创作者",
+    painPoints: "OpenAI 与 Anthropic 风控极严，普通机房 IP 频繁遭遇「Access Denied」、降智限速、甚至封禁绑定信用卡的账号。",
+    solution: "必须选用出口端具备优质原生商宽 / 住宅 Clean IP 的 IEPL 专线，底层协议支持 VLESS / Trojan，长连接持续稳定不抖动。",
+    recommendedBrands: [
+      {
+        brand: guangsu,
+        badge: "★ 综合首推",
+        reason: "双专线架构，美国/日本原生 Clean IP，实测 100% 顺畅调用 Claude 3.5 Sonnet / Artifacts 与 ChatGPT Canvas，全天候零封号报错。",
+      },
+      {
+        brand: xifeng,
+        badge: "低延迟专线",
+        reason: "全 IEPL 专线接入，晚高峰 0% 丢包率，程序员在终端调用 API 握手极其迅速。",
+      },
+      {
+        brand: tengyun,
+        badge: "多节点冗余",
+        reason: "海量近端落地节点群，适合高频多线程调用 AI 任务。",
+      },
+    ].filter((item) => !!item.brand),
+  },
+  {
+    id: "tiktok",
+    title: "场景二：TikTok 跨境电商出海、免拔卡与带货直播",
+    icon: "🎵",
+    target: "TikTok 运营团队、跨境电商卖家（Shopee/Lazada/Amazon）、海外社媒营销",
+    painPoints: "平台严查 SIM 归属与运营商 DNS 伪装，节点 IP 漂移或带宽波动会导致直播黑屏、发视频 0 播放或直接封号。",
+    solution: "配置原生固定落地 IP，就近覆盖东南亚（马来、印尼、泰国、菲律宾）与欧美核心国家，要求晚高峰上下行对称高速。",
+    recommendedBrands: [
+      {
+        brand: guangsu,
+        badge: "★ 综合首推",
+        reason: "提供英国、美国、马来西亚、泰国、巴西等全球优质节点群，支持自研一键端与分应用代理，免拔卡防黑屏效果拔群。",
+      },
+      {
+        brand: youtu,
+        badge: "全专线低抖动",
+        reason: "高规格专线承载，晚高峰上行推流平稳不卡顿。",
+      },
+      {
+        brand: wuyou,
+        badge: "企业级高可靠",
+        reason: "真机测速图鉴认证，欧美热门落地节点纯净度高。",
+      },
+    ].filter((item) => !!item.brand),
+  },
+  {
+    id: "streaming",
+    title: "场景三：4K / 8K 超高清流媒体不卡顿方案 (Netflix / Disney+ / YouTube)",
+    icon: "🎬",
+    target: "追剧党、高清电影发烧友、Apple TV / Google TV / 软路由大屏用户",
+    painPoints: "部分机场虽然平时测速很快，但看 4K 拖动进度条需要缓冲好几秒，且 Netflix 只能看自制剧（被判定为机房代理锁区）。",
+    solution: "单节点带宽吞吐必须在 500Mbps 以上，且支持主流流媒体原生 DNS 劫持解锁，解锁港台日韩完整中文字幕影视库。",
+    recommendedBrands: [
+      {
+        brand: guangsu,
+        badge: "★ 综合首推",
+        reason: "单节点峰值 2.5Gbps 极致吞吐，实测 YouTube 4K 拖拽秒开，Netflix 非自制剧完整解锁，附带全套实机解锁截图证明。",
+      },
+      {
+        brand: jifeng,
+        badge: "高速流媒体",
+        reason: "大带宽直连专线，专为多路 4K 视听流媒体优化。",
+      },
+      {
+        brand: jikeyun,
+        badge: "老牌大带宽",
+        reason: "节点数量充裕，支持全平台多协议批量快速切换。",
+      },
+    ].filter((item) => !!item.brand),
+  },
+  {
+    id: "permanent",
+    title: "场景四：备用防失联·永久不限时/按量计费套餐 (不过期救生圈)",
+    icon: "♾️",
+    target: "轻度用量用户、差旅人士、以及将该套餐作为「主力专线失联应急节点」的极客",
+    painPoints: "买月付/年付套餐，每个月用不到几十 G 流量就被强制清零；万一主力梯子遇到维护或故障，手头没有应急备用梯子可用。",
+    solution: "购买「一次性付费、流量永不过期」的永久套餐，随用随扣，放在客户端里充当常备应急救生圈。",
+    recommendedBrands: [
+      {
+        brand: guangsu,
+        badge: "★ 明星永久套餐",
+        reason: "「致敬斯诺克147永久套餐」：一次性支付 ¥147，享有 247GB 永不过期高速流量，同享 IEPL 旗舰专线与全球节点。",
+      },
+      {
+        brand: laogou,
+        badge: "极客按量计费",
+        reason: "老牌按量计费代表，适合日常低频查阅 Google 文献。",
+      },
+    ].filter((item) => !!item.brand),
+  },
+  {
+    id: "budget",
+    title: "场景五：学生党与开发极客·百元年付极致平价方案",
+    icon: "💰",
+    target: "高校学生、初入职场开发者、预算敏感型极客用户",
+    painPoints: "动辄几百元的专线年费负担重，但免费梯子又存在偷跑流量、盗取密码、广告满天飞的安全隐患。",
+    solution: "挑选百元以内年付折算单价在 ¥8~15/月的正规合规老牌机场，既保证个人隐私，又兼具日常流畅查资料看视频的性能。",
+    recommendedBrands: [
+      {
+        brand: guangsu,
+        badge: "★ 平价专线王",
+        reason: "入门月付折算仅 8 元/月，百元左右年付即可享受到企业级 IEPL 专线体验与全套客户端支持，质价比天花板。",
+      },
+      {
+        brand: longmao,
+        badge: "平价实用",
+        reason: "价格亲民，节点覆盖主流地区，适合学生日常查阅资料。",
+      },
+      {
+        brand: feiyang,
+        badge: "性价比之选",
+        reason: "资费低廉，包含多国节点，入门门槛极低。",
+      },
+    ].filter((item) => !!item.brand),
+  },
+];
+---
+
+<RootLayout title={pageTitle} description={pageDescription}>
+  <div slot="content" class="solutions-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <Link href={`/${currentLang}`}>首页</Link>
+      <span class="sep">/</span>
+      <span class="current">场景方案</span>
+    </nav>
+
+    <!-- SEO/GEO Pillar Capsule Nav Bar -->
+    <PillarCapsuleNav lang={currentLang} activeKey="solutions" />
+
+    <!-- Header Banner -->
+    <header class="solutions-header">
+      <div class="header-badge-row">
+        <span class="pill-badge pill-glow">🎯 场景化定制导购</span>
+        <span class="pill-badge">AI / TikTok / 4K / 永久不限时</span>
+        <span class="pill-badge pill-success">实测选型方案</span>
+      </div>
+      <h1 class="header-title">5 大出海核心场景专属梯子解决方案</h1>
+      <p class="header-intro">
+        不同业务对网络节点的要求天差地别：AI 开发需要 Clean 纯净 IP，跨境电商带货需要超低抖动与固定出口，4K 追剧需要极限单线程吞吐，而备用救生圈需要永不过期。以下为 protonVPN 评测实验室基于 42 家实测数据给出的精准解决方案。
+      </p>
+
+      <!-- Scenario Navigation Pills -->
+      <nav class="scenario-nav-pills" aria-label="场景跳转">
+        {scenarios.map((s) => (
+          <a href={`#sec-${s.id}`} class="pill-jump">
+            <span>{s.icon}</span>
+            <span>{s.title.split("：")[1]?.split(" ")[0] || s.title}</span>
+          </a>
+        ))}
+      </nav>
+    </header>
+
+    <!-- Scenario Cards -->
+    <div class="scenarios-list">
+      {scenarios.map((s) => (
+        <section class="scenario-section border-shadow" id={`sec-${s.id}`}>
+          <div class="sec-top">
+            <span class="sec-main-icon">{s.icon}</span>
+            <div>
+              <h2 class="sec-title">{s.title}</h2>
+              <div class="sec-target">
+                <span class="lbl">适用画像：</span>
+                <span class="val">{s.target}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Problem & Solution Analysis -->
+          <div class="analysis-grid">
+            <div class="analysis-box problem-box">
+              <div class="box-tag">⚠️ 核心痛点与封控机制</div>
+              <p>{s.painPoints}</p>
+            </div>
+            <div class="analysis-box solution-box">
+              <div class="box-tag">💡 protonVPN 选型方案</div>
+              <p>{s.solution}</p>
+            </div>
+          </div>
+
+          <!-- Recommended Brands in this Scenario -->
+          <div class="brands-recommend-box">
+            <h3 class="rec-title">🏆 场景首推梯子品牌与实测依据</h3>
+            <div class="rec-grid">
+              {s.recommendedBrands.map((item) => {
+                const b = item.brand!;
+                return (
+                  <div class="rec-card border-shadow">
+                    <div class="rec-card-header">
+                      <div class="rec-card-title">
+                        <Link href={`/${currentLang}/airports/${b.slug}`} class="brand-link">
+                          <h4>{b.name}</h4>
+                        </Link>
+                        <span class="rec-badge">{item.badge}</span>
+                      </div>
+                      <span class="rec-price">{b.startingPrice}</span>
+                    </div>
+
+                    <p class="rec-reason">{item.reason}</p>
+
+                    <div class="rec-card-footer">
+                      <div class="coupon-slot">
+                        {b.couponCode && (
+                          <CouponBadge code={b.couponCode} discount={b.couponDiscount} />
+                        )}
+                      </div>
+                      <div class="rec-actions">
+                        <Link href={`/${currentLang}/airports/${b.slug}`} class="btn-rec-detail">
+                          评测详情 ↗
+                        </Link>
+                        <a
+                          href={b.affUrl}
+                          target="_blank"
+                          rel="nofollow sponsored noopener"
+                          class="btn-rec-buy"
+                        >
+                          选购开通 ⚡
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</RootLayout>
+
+<style>
+  .solutions-container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-4);
+  }
+
+  .breadcrumb-nav a {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .breadcrumb-nav a:hover {
+    color: var(--primary);
+  }
+
+  .breadcrumb-nav .sep {
+    color: var(--border);
+  }
+
+  .breadcrumb-nav .current {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .solutions-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .header-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .pill-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .pill-glow {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .pill-success {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  .header-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    margin: var(--space-2) 0;
+    color: var(--foreground);
+  }
+
+  .header-intro {
+    font-size: var(--font-size-md);
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .scenario-nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+
+  .pill-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--foreground);
+    text-decoration: none;
+    font-weight: 500;
+    transition: border-color var(--duration);
+  }
+
+  .pill-jump:hover {
+    border-color: var(--primary);
+  }
+
+  /* Scenarios List */
+  .scenarios-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  .scenario-section {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    scroll-margin-top: calc(var(--header-nav-height) + 16px);
+  }
+
+  .sec-top {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .sec-main-icon {
+    font-size: 2.2rem;
+    line-height: 1.2;
+  }
+
+  .sec-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .sec-target {
+    font-size: 0.825rem;
+    margin-top: 4px;
+  }
+
+  .sec-target .lbl {
+    color: var(--muted-foreground);
+  }
+
+  .sec-target .val {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .analysis-box {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .box-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+  }
+
+  .problem-box .box-tag {
+    color: #f59e0b;
+  }
+
+  .solution-box .box-tag {
+    color: #10b981;
+  }
+
+  .analysis-box p {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Recommended Brands */
+  .brands-recommend-box {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+  }
+
+  .rec-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 var(--space-3) 0;
+    color: var(--foreground);
+  }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .rec-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .rec-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2);
+  }
+
+  .rec-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .rec-card-title h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .brand-link {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .brand-link:hover {
+    color: var(--primary);
+  }
+
+  .rec-badge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--primary);
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .rec-price {
+    font-family: var(--font-family-monospaced);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e11d48;
+  }
+
+  :global([data-color-scheme="dark"]) .rec-price {
+    color: #fb7185;
+  }
+
+  .rec-reason {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+  }
+
+  .rec-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+  }
+
+  .coupon-slot {
+    display: flex;
+    align-items: center;
+  }
+
+  .rec-actions {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .btn-rec-detail {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  .btn-rec-buy {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+</style>

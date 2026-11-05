@@ -1,0 +1,301 @@
+---
+export interface Props {
+  lineType: string;
+  protocols: string[];
+  regions?: string[];
+  maxBandwidth?: string;
+}
+
+const { lineType, protocols, regions = ["香港", "日本", "新加坡", "美国"], maxBandwidth } = Astro.props;
+
+// Determine line tag
+const isIEPL = lineType.toUpperCase().includes("IEPL") || lineType.toUpperCase().includes("IPLC") || lineType.includes("专线");
+---
+
+<div class="topology-wrapper border-shadow">
+  <div class="topology-header">
+    <div class="topology-title">
+      <span class="status-pulse"></span>
+      <span>端到端链路观测拓扑 (End-to-End Route Observatory)</span>
+    </div>
+    <div class="topology-badges">
+      <span class="badge badge-line">{lineType}</span>
+      {maxBandwidth && <span class="badge badge-bw">带宽吞吐: {maxBandwidth}</span>}
+    </div>
+  </div>
+
+  <div class="topology-flow">
+    <!-- Node 1: Client -->
+    <div class="topo-node">
+      <div class="node-icon">💻</div>
+      <div class="node-label">用户终端</div>
+      <div class="node-sub">Clash / 小火箭 / 原生端</div>
+    </div>
+
+    <!-- Arrow 1 -->
+    <div class="topo-connector">
+      <div class="connector-line"></div>
+      <div class="connector-label">就近接入 (0.5~15ms)</div>
+    </div>
+
+    <!-- Node 2: Domestic Ingress -->
+    <div class="topo-node">
+      <div class="node-icon">🏢</div>
+      <div class="node-label">前置入口网关</div>
+      <div class="node-sub">BGP 多线高防中继</div>
+    </div>
+
+    <!-- Arrow 2: Tunnel -->
+    <div class="topo-connector tunnel">
+      <div class="connector-line tunnel-line"></div>
+      <div class="connector-label tunnel-label">{isIEPL ? "⚡ IEPL/IPLC 物理级专线隧道" : "🌐 BGP / 直连加密通道"}</div>
+      <div class="connector-meta">0 墙审查 · 0 丢包率</div>
+    </div>
+
+    <!-- Node 3: Outbound Egress -->
+    <div class="topo-node">
+      <div class="node-icon">🌍</div>
+      <div class="node-label">落地节点集群</div>
+      <div class="node-sub">{regions.slice(0, 4).join(" · ")}</div>
+    </div>
+
+    <!-- Arrow 3 -->
+    <div class="topo-connector">
+      <div class="connector-line"></div>
+      <div class="connector-label">住宅 / 商宽原生 IP</div>
+    </div>
+
+    <!-- Node 4: Target -->
+    <div class="topo-node highlight">
+      <div class="node-icon">🎯</div>
+      <div class="node-label">全球目标服务</div>
+      <div class="node-sub">AI / 4K / 流媒体 / 跨境业务</div>
+    </div>
+  </div>
+
+  <div class="topology-footer">
+    <div class="protocol-tags">
+      <span class="protocol-label">承载传输协议:</span>
+      {protocols.map((p) => (
+        <span class="protocol-badge">{p}</span>
+      ))}
+    </div>
+    <div class="observatory-hint">
+      <span>🛡️ 晚高峰 SLA 可用率监测 &gt; 99.8%</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .topology-wrapper {
+    background: var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    overflow-x: auto;
+  }
+
+  .topology-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topology-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    font-size: var(--font-size-md);
+    color: var(--foreground);
+  }
+
+  .status-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+
+  .topology-badges {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .badge-line {
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--primary);
+  }
+
+  .badge-bw {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+
+  .topology-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 680px;
+    padding: var(--space-3) 0;
+  }
+
+  .topo-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    min-width: 110px;
+    box-shadow: 0 2px 4px var(--shadow);
+  }
+
+  .topo-node.highlight {
+    border-color: var(--primary);
+    background: rgba(14, 165, 233, 0.05);
+  }
+
+  .node-icon {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+  }
+
+  .node-label {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .node-sub {
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  .topo-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    padding: 0 var(--space-1);
+  }
+
+  .connector-line {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .connector-line::after {
+    content: "▶";
+    position: absolute;
+    right: -4px;
+    top: -5px;
+    font-size: 8px;
+    color: var(--muted-foreground);
+  }
+
+  .tunnel .tunnel-line {
+    height: 3px;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+  }
+
+  .tunnel .tunnel-line::after {
+    color: #818cf8;
+  }
+
+  .connector-label {
+    font-size: 0.65rem;
+    color: var(--muted-foreground);
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+
+  .tunnel-label {
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .connector-meta {
+    font-size: 0.6rem;
+    color: #10b981;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
+
+  .topology-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+    font-size: var(--font-size-sm);
+  }
+
+  .protocol-tags {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+  }
+
+  .protocol-label {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .protocol-badge {
+    font-family: var(--font-family-monospaced);
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--foreground);
+  }
+
+  .observatory-hint {
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 500;
+  }
+</style>

@@ -1,0 +1,291 @@
+---
+import Link from "@/components/ui/Link.astro";
+
+interface Props {
+  lang?: string;
+  activeKey?: "free" | "airports" | "speedtest" | "clients" | "solutions" | "home" | "faq" | "warnings" | "all";
+}
+
+const { lang = "zh-Hans", activeKey = "free" } = Astro.props;
+
+const navItems = [
+  {
+    key: "free",
+    title: "🔥 免费资源安全库",
+    badge: "万字指南",
+    href: `/${lang}/free`,
+    description: "蜜罐避坑 / 纯净工具 / 白嫖机制",
+  },
+  {
+    key: "faq",
+    title: "💡 进阶排障FAQ圣经",
+    badge: "万字专著",
+    href: `/${lang}/faq`,
+    description: "晚高峰卡顿 / ChatGPT 1020 / TUN冲突",
+  },
+  {
+    key: "airports",
+    title: "📊 42家梯子数据库",
+    badge: "全景对比",
+    href: `/${lang}/airports`,
+    description: "晚高峰压测 / 专线平价梯子综合评测",
+  },
+  {
+    key: "speedtest",
+    title: "⚡ 晚高峰测速实验室",
+    badge: "真机存证",
+    href: `/${lang}/speedtest`,
+    description: "16+ 原始跑图 / 单线程峰值天梯榜",
+  },
+  {
+    key: "clients",
+    title: "📱 全平台客户端全书",
+    badge: "TUN调优",
+    href: `/${lang}/clients`,
+    description: "Clash Verge / 小火箭 / 免断网实操",
+  },
+  {
+    key: "solutions",
+    title: "🎯 5大出海场景方案",
+    badge: "定制选型",
+    href: `/${lang}/solutions`,
+    description: "AI抗风控 / TikTok防封 / 永久不过期",
+  },
+];
+---
+
+<nav class="pillar-capsule-nav" aria-label="SEO/GEO 核心专题矩阵导航">
+  <div class="capsule-header">
+    <div class="capsule-label">
+      <span class="radar-dot"></span>
+      <span class="capsule-tag">GEO 专题导航矩阵</span>
+      <span class="capsule-sub">全站 5 大硬核专著级知识库直达</span>
+    </div>
+    <span class="capsule-hint">左右滑动切换 ➔</span>
+  </div>
+
+  <div class="capsule-track">
+    {
+      navItems.map((item) => {
+        const isActive = activeKey === item.key;
+        return (
+          <Link
+            href={item.href}
+            class={`capsule-item ${isActive ? "active" : ""}`}
+            aria-current={isActive ? "page" : undefined}
+          >
+            <div class="capsule-top">
+              <span class="capsule-title">{item.title}</span>
+              <span class="capsule-badge">{item.badge}</span>
+            </div>
+            <span class="capsule-desc">{item.description}</span>
+            {isActive && <span class="active-indicator" />}
+          </Link>
+        );
+      })
+    }
+  </div>
+</nav>
+
+<style>
+  .pillar-capsule-nav {
+    margin: 1.25rem 0 2rem 0;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(3, 105, 161, 0.04) 0%, rgba(17, 24, 39, 0.02) 100%);
+    border: 1px solid rgba(3, 105, 161, 0.15);
+    border-radius: var(--radius-xl, 12px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  }
+
+  :global([data-color-scheme="dark"]) .pillar-capsule-nav {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(31, 41, 55, 0.6) 100%);
+    border-color: rgba(56, 189, 248, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .capsule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed rgba(156, 163, 175, 0.2);
+  }
+
+  .capsule-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .radar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    animation: radar-pulse 2s infinite;
+  }
+
+  @keyframes radar-pulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+
+  .capsule-tag {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--primary, #0369a1);
+    letter-spacing: 0.02em;
+  }
+
+  .capsule-sub {
+    font-size: 0.75rem;
+    color: var(--muted-foreground, #6b7280);
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .capsule-sub {
+      display: inline;
+    }
+  }
+
+  .capsule-hint {
+    font-size: 0.7rem;
+    color: var(--muted-foreground, #9ca3af);
+  }
+
+  @media (min-width: 1024px) {
+    .capsule-hint {
+      display: none;
+    }
+  }
+
+  .capsule-track {
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .capsule-track::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .capsule-track::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.4);
+    border-radius: 4px;
+  }
+
+  .capsule-item {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.55rem 0.85rem;
+    background: var(--background, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-lg, 8px);
+    text-decoration: none;
+    color: var(--foreground, #111827);
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    min-width: 165px;
+  }
+
+  :global([data-color-scheme="dark"]) .capsule-item {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+
+  .capsule-item:hover {
+    border-color: var(--primary, #0369a1);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .capsule-item.active {
+    background: linear-gradient(135deg, rgba(3, 105, 161, 0.1) 0%, rgba(3, 105, 161, 0.05) 100%);
+    border-color: var(--primary, #0369a1);
+    box-shadow: 0 0 0 1px var(--primary, #0369a1);
+  }
+
+  :global([data-color-scheme="dark"]) .capsule-item.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.08) 100%);
+    border-color: var(--primary, #38bdf8);
+    box-shadow: 0 0 0 1px var(--primary, #38bdf8);
+  }
+
+  .capsule-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .capsule-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .capsule-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 9999px;
+    background: rgba(3, 105, 161, 0.1);
+    color: var(--primary, #0369a1);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  :global([data-color-scheme="dark"]) .capsule-badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary, #38bdf8);
+  }
+
+  .capsule-item.active .capsule-badge {
+    background: var(--primary, #0369a1);
+    color: #ffffff;
+  }
+
+  :global([data-color-scheme="dark"]) .capsule-item.active .capsule-badge {
+    background: var(--primary, #38bdf8);
+    color: #0f172a;
+  }
+
+  .capsule-desc {
+    font-size: 0.7rem;
+    color: var(--muted-foreground, #6b7280);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .active-indicator {
+    position: absolute;
+    bottom: -1px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: var(--primary, #0369a1);
+    border-radius: 2px;
+  }
+
+  :global([data-color-scheme="dark"]) .active-indicator {
+    background: var(--primary, #38bdf8);
+  }
+</style>
